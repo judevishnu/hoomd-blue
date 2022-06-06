@@ -137,60 +137,64 @@ void MeshGroupData<group_size, Group, name, snap, bond>::initializeFromSnapshot(
     	        typename BondedGroupData<group_size, Group, name, true>::members_t triag;
     	        std::vector<typename BondedGroupData<group_size, Group, name, true>::members_t> bonds(
     	            3);
+
     	        triag.tag[0] = snapshot.groups[group_idx].tag[0];
     	        triag.tag[1] = snapshot.groups[group_idx].tag[1];
     	        triag.tag[2] = snapshot.groups[group_idx].tag[2];
 
     	        bonds[0].tag[0] = triag.tag[0];
     	        bonds[0].tag[1] = triag.tag[1];
-    	        bonds[0].tag[2] = group_idx;
-    	        bonds[0].tag[3] = group_idx;
+    	        bonds[0].tag[2] = triag.tag[2];
+    	        bonds[0].tag[3] = triag.tag[2];
+
     	        bonds[1].tag[0] = triag.tag[1];
     	        bonds[1].tag[1] = triag.tag[2];
-    	        bonds[1].tag[2] = group_idx;
-    	        bonds[1].tag[3] = group_idx;
+    	        bonds[1].tag[2] = triag.tag[0];
+    	        bonds[1].tag[3] = triag.tag[0];
+
     	        bonds[2].tag[0] = triag.tag[2];
     	        bonds[2].tag[1] = triag.tag[0];
-    	        bonds[2].tag[2] = group_idx;
-    	        bonds[2].tag[3] = group_idx;
+    	        bonds[2].tag[2] = triag.tag[1];
+    	        bonds[2].tag[3] = triag.tag[1];
 
-    	        unsigned int bond0, bond1; 
+    	        unsigned int bond0, bond1, bond2; 
     	        for (unsigned int j = 0; j < bonds.size(); ++j)
     	            {
     	            if(bonds[j].tag[0] < bonds[j].tag[1])
-    	    	    {
-    	    	    bond0 = bonds[j].tag[0]; 
-    	    	    bond1 = bonds[j].tag[1]; 
-    	    	    }
-    	    	else
-    	    	    {
-    	    	    bond1 = bonds[j].tag[0]; 
-    	    	    bond0 = bonds[j].tag[1]; 
-    	    	    }
-    	    	if(all_helper.size() < bond0+1)
-    	               all_helper.resize(bond0+1);
+    	    	        {
+    	    	        bond0 = bonds[j].tag[0]; 
+    	    	        bond1 = bonds[j].tag[1]; 
+    	    	        }
+    	    	    else
+    	    	        {
+    	    	        bond1 = bonds[j].tag[0]; 
+    	    	        bond0 = bonds[j].tag[1]; 
+    	    	        }
+    	    	    bond2 = bonds[j].tag[2]; 
+    	    	    if(all_helper.size() < bond0+1)
+    	                   all_helper.resize(bond0+1);
 
-    	    	bool update = true;
+    	    	    bool update = true;
 
     	            for (unsigned int i = 0; i < all_helper[bond0].size(); i+=2)
     	                {
     	                if (bond1 == all_helper[bond0][i])
     	                    {
-    	    		unsigned int triag_idx = all_helper[bond0][i+1];
-    	                    all_groups[triag_idx].tag[3] = group_idx;
-    	    		update=false;
+    	    	            unsigned int triag_idx = all_helper[bond0][i+1];
+    	                    all_groups[triag_idx].tag[3] = bond2;
+    	    	            update=false;
     	                    break;
     	                    }
     	                }
 
-    	    	if(update)
-    	    	   {
-    	               all_helper[bond0].push_back(bond1);
-    	               all_helper[bond0].push_back(triag_number);
-    	    	   triag_number++;
-    	               all_groups.push_back(bonds[j]);
-    	    	   }
-    	            }
+    	    	    if(update)
+    	    	         {
+    	                 all_helper[bond0].push_back(bond1);
+    	                 all_helper[bond0].push_back(triag_number);
+			 triag_number++;
+    	                 all_groups.push_back(bonds[j]);
+    	    	         }
+		    }
     	        }
     	    }
     	else
@@ -522,7 +526,10 @@ void MeshGroupData<group_size, Group, name, snap, bond>::rebuildGPUTable()
                         = static_cast<typeval_t>(this->m_group_typeval[cur_group]).type;
                     for (unsigned int j = group_size_half; j < group_size; ++j)
                         {
-                        h.idx[j - 1] = g.tag[j];
+                        unsigned int tag = g.tag[j];
+			if(bond)
+                           tag = h_rtag.data[tag];
+                        h.idx[j - 1] = tag;
                         }
 
                     // list all group members j!=i in p.idx
@@ -613,6 +620,7 @@ void MeshGroupData<group_size, Group, name, snap, bond>::rebuildGPUTableGPU()
                 d_n_groups.data,
                 this->m_gpu_table_indexer.getH(),
                 d_condition.data,
+		bond,
                 this->m_next_flag,
                 flag,
                 d_gpu_table.data,

@@ -26,20 +26,16 @@ namespace kernel
     \param d_sigma_dash Device memory to write per particle sigma_dash
     \param N number of particles
     \param d_pos device array of particle positions
-    \param d_rtag device array of particle reverse tags
     \param box Box dimensions (in GPU format) to use for periodic boundary conditions
     \param blist List of mesh bonds stored on the GPU
-    \param d_triangles device array of mesh triangles
     \param n_bonds_list List of numbers of mesh bonds stored on the GPU
 */
 __global__ void gpu_compute_helfrich_sigma_kernel(Scalar* d_sigma,
                                                   Scalar3* d_sigma_dash,
                                                   const unsigned int N,
                                                   const Scalar4* d_pos,
-                                                  const unsigned int* d_rtag,
                                                   BoxDim box,
                                                   const group_storage<4>* blist,
-                                                  const group_storage<6>* d_triangles,
                                                   const Index2D blist_idx,
                                                   const unsigned int* n_bonds_list)
     {
@@ -67,33 +63,11 @@ __global__ void gpu_compute_helfrich_sigma_kernel(Scalar* d_sigma,
         group_storage<4> cur_bond = blist[blist_idx(idx, bond_idx)];
 
         int cur_bond_idx = cur_bond.idx[0];
-        int cur_tr1_idx = cur_bond.idx[1];
-        int cur_tr2_idx = cur_bond.idx[2];
+        int cur_idx_c = cur_bond.idx[1];
+        int cur_idx_d = cur_bond.idx[2];
 
-        if (cur_tr1_idx == cur_tr2_idx)
+        if (cur_idx_c == cur_idx_d)
             continue;
-
-        const group_storage<6>& triangle1 = d_triangles[cur_tr1_idx];
-
-        unsigned int cur_idx_c = d_rtag[triangle1.tag[0]];
-
-        unsigned int iterator = 1;
-        while (idx == cur_idx_c || cur_bond_idx == cur_idx_c)
-            {
-            cur_idx_c = d_rtag[triangle1.tag[iterator]];
-            iterator++;
-            }
-
-        const group_storage<6>& triangle2 = d_triangles[cur_tr2_idx];
-
-        unsigned int cur_idx_d = d_rtag[triangle2.tag[0]];
-
-        iterator = 1;
-        while (idx == cur_idx_d || cur_bond_idx == cur_idx_d)
-            {
-            cur_idx_d = d_rtag[triangle2.tag[iterator]];
-            iterator++;
-            }
 
         // get the b-particle's position (MEM TRANSFER: 16 bytes)
         Scalar4 bb_postype = d_pos[cur_bond_idx];
@@ -184,10 +158,8 @@ __global__ void gpu_compute_helfrich_sigma_kernel(Scalar* d_sigma,
     \param d_sigma_dash Device memory to write per particle sigma_dash
     \param N number of particles
     \param d_pos device array of particle positions
-    \param d_rtag device array of particle reverse tags
     \param box Box dimensions (in GPU format) to use for periodic boundary conditions
     \param blist List of mesh bonds stored on the GPU
-    \param d_triangles device array of mesh triangles
     \param n_bonds_list List of numbers of mesh bonds stored on the GPU
     \param block_size Block size to use when performing calculations
     \param compute_capability Device compute capability (200, 300, 350, ...)
@@ -199,10 +171,8 @@ hipError_t gpu_compute_helfrich_sigma(Scalar* d_sigma,
                                       Scalar3* d_sigma_dash,
                                       const unsigned int N,
                                       const Scalar4* d_pos,
-                                      const unsigned int* d_rtag,
                                       const BoxDim& box,
                                       const group_storage<4>* blist,
-                                      const group_storage<6>* d_triangles,
                                       const Index2D blist_idx,
                                       const unsigned int* n_bonds_list,
                                       int block_size)
@@ -228,10 +198,8 @@ hipError_t gpu_compute_helfrich_sigma(Scalar* d_sigma,
                        d_sigma_dash,
                        N,
                        d_pos,
-                       d_rtag,
                        box,
                        blist,
-                       d_triangles,
                        blist_idx,
                        n_bonds_list);
 
@@ -244,12 +212,10 @@ hipError_t gpu_compute_helfrich_sigma(Scalar* d_sigma,
     \param virial_pitch
     \param N number of particles
     \param d_pos device array of particle positions
-    \param d_rtag device array of particle reverse tags
     \param box Box dimensions (in GPU format) to use for periodic boundary conditions
     \param d_sigma Device memory to write per paricle sigma
     \param d_sigma_dash Device memory to write per particle sigma_dash
     \param blist List of mesh bonds stored on the GPU
-    \param d_triangles device array of mesh triangles
     \param n_bonds_list List of numbers of mesh bonds stored on the GPU
     \param d_params K params packed as Scalar variables
     \param n_bond_type number of mesh bond types
@@ -260,12 +226,10 @@ __global__ void gpu_compute_helfrich_force_kernel(Scalar4* d_force,
                                                   const size_t virial_pitch,
                                                   const unsigned int N,
                                                   const Scalar4* d_pos,
-                                                  const unsigned int* d_rtag,
                                                   BoxDim box,
                                                   const Scalar* d_sigma,
                                                   const Scalar3* d_sigma_dash,
                                                   const group_storage<4>* blist,
-                                                  const group_storage<6>* d_triangles,
                                                   const Index2D blist_idx,
                                                   const unsigned int* n_bonds_list,
                                                   Scalar* d_params,
@@ -303,34 +267,12 @@ __global__ void gpu_compute_helfrich_force_kernel(Scalar4* d_force,
         group_storage<4> cur_bond = blist[blist_idx(idx, bond_idx)];
 
         int cur_bond_idx = cur_bond.idx[0];
-        int cur_tr1_idx = cur_bond.idx[1];
-        int cur_tr2_idx = cur_bond.idx[2];
+        int cur_idx_c = cur_bond.idx[1];
+        int cur_idx_d = cur_bond.idx[2];
         int cur_bond_type = 0;
 
-        if (cur_tr1_idx == cur_tr2_idx)
+        if (cur_idx_c == cur_idx_d)
             continue;
-
-        const group_storage<6>& triangle1 = d_triangles[cur_tr1_idx];
-
-        unsigned int cur_idx_c = d_rtag[triangle1.tag[0]];
-
-        unsigned int iterator = 1;
-        while (idx == cur_idx_c || cur_bond_idx == cur_idx_c)
-            {
-            cur_idx_c = d_rtag[triangle1.tag[iterator]];
-            iterator++;
-            }
-
-        const group_storage<6>& triangle2 = d_triangles[cur_tr2_idx];
-
-        unsigned int cur_idx_d = d_rtag[triangle2.tag[0]];
-
-        iterator = 1;
-        while (idx == cur_idx_d || cur_bond_idx == cur_idx_d)
-            {
-            cur_idx_d = d_rtag[triangle2.tag[iterator]];
-            iterator++;
-            }
 
         // get the b-particle's position (MEM TRANSFER: 16 bytes)
         Scalar4 bb_postype = d_pos[cur_bond_idx];
@@ -559,12 +501,10 @@ hipError_t gpu_compute_helfrich_force(Scalar4* d_force,
                                       const size_t virial_pitch,
                                       const unsigned int N,
                                       const Scalar4* d_pos,
-                                      const unsigned int* d_rtag,
                                       const BoxDim& box,
                                       const Scalar* d_sigma,
                                       const Scalar3* d_sigma_dash,
                                       const group_storage<4>* blist,
-                                      const group_storage<6>* d_triangles,
                                       const Index2D blist_idx,
                                       const unsigned int* n_bonds_list,
                                       Scalar* d_params,
@@ -594,12 +534,10 @@ hipError_t gpu_compute_helfrich_force(Scalar4* d_force,
                        virial_pitch,
                        N,
                        d_pos,
-                       d_rtag,
                        box,
                        d_sigma,
                        d_sigma_dash,
                        blist,
-                       d_triangles,
                        blist_idx,
                        n_bonds_list,
                        d_params,

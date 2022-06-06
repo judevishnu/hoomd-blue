@@ -47,8 +47,8 @@ HelfrichMeshForceComputeGPU::HelfrichMeshForceComputeGPU(std::shared_ptr<SystemD
     m_tuner_sigma.reset(
         new Autotuner(warp_size, 1024, warp_size, 5, 100000, "helfrich_sigma", this->m_exec_conf));
 
-    GlobalVector<Scalar3> tmp_sigma_dash(m_pdata->getN(), m_exec_conf);
-    GlobalVector<Scalar> tmp_sigma(m_pdata->getN(), m_exec_conf);
+    GlobalVector<Scalar3> tmp_sigma_dash(m_pdata->getNGlobal(), m_exec_conf);
+    GlobalVector<Scalar> tmp_sigma(m_pdata->getNGlobal(), m_exec_conf);
 
         {
         ArrayHandle<Scalar3> old_sigma_dash(m_sigma_dash, access_location::host);
@@ -58,7 +58,7 @@ HelfrichMeshForceComputeGPU::HelfrichMeshForceComputeGPU(std::shared_ptr<SystemD
         ArrayHandle<Scalar> sigma(tmp_sigma, access_location::host);
 
         // for each type of the particles in the group
-        for (unsigned int i = 0; i < m_pdata->getN(); i++)
+        for (unsigned int i = 0; i < m_pdata->getNGlobal(); i++)
             {
             sigma_dash.data[i] = old_sigma_dash.data[i];
 
@@ -86,18 +86,11 @@ void HelfrichMeshForceComputeGPU::setParams(unsigned int type, Scalar K)
  */
 void HelfrichMeshForceComputeGPU::computeForces(uint64_t timestep)
     {
+
     precomputeParameter();
 
     // access the particle data arrays
     ArrayHandle<Scalar4> d_pos(m_pdata->getPositions(), access_location::device, access_mode::read);
-    ArrayHandle<unsigned int> d_rtag(m_pdata->getRTags(),
-                                     access_location::device,
-                                     access_mode::read);
-
-    ArrayHandle<typename MeshTriangle::members_t> d_triangles(
-        m_mesh_data->getMeshTriangleData()->getMembersArray(),
-        access_location::device,
-        access_mode::read);
 
     ArrayHandle<Scalar> d_sigma(m_sigma, access_location::device, access_mode::read);
     ArrayHandle<Scalar3> d_sigma_dash(m_sigma_dash, access_location::device, access_mode::read);
@@ -129,12 +122,10 @@ void HelfrichMeshForceComputeGPU::computeForces(uint64_t timestep)
                                        m_virial.getPitch(),
                                        m_pdata->getN(),
                                        d_pos.data,
-                                       d_rtag.data,
                                        box,
                                        d_sigma.data,
                                        d_sigma_dash.data,
                                        d_gpu_meshbondlist.data,
-                                       d_triangles.data,
                                        gpu_table_indexer,
                                        d_gpu_n_meshbond.data,
                                        d_params.data,
@@ -167,15 +158,6 @@ void HelfrichMeshForceComputeGPU::precomputeParameter()
     {
     // access the particle data arrays
     ArrayHandle<Scalar4> d_pos(m_pdata->getPositions(), access_location::device, access_mode::read);
-    ArrayHandle<unsigned int> d_rtag(m_pdata->getRTags(),
-                                     access_location::device,
-                                     access_mode::read);
-
-    ArrayHandle<typename MeshTriangle::members_t> d_triangles(
-        m_mesh_data->getMeshTriangleData()->getMembersArray(),
-        access_location::device,
-        access_mode::read);
-
     ArrayHandle<Scalar> d_sigma(m_sigma, access_location::device, access_mode::readwrite);
     ArrayHandle<Scalar3> d_sigma_dash(m_sigma_dash,
                                       access_location::device,
@@ -200,10 +182,8 @@ void HelfrichMeshForceComputeGPU::precomputeParameter()
                                        d_sigma_dash.data,
                                        m_pdata->getN(),
                                        d_pos.data,
-                                       d_rtag.data,
                                        box,
                                        d_gpu_meshbondlist.data,
-                                       d_triangles.data,
                                        gpu_table_indexer,
                                        d_gpu_n_meshbond.data,
                                        m_tuner_sigma->getParam());

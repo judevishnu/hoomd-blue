@@ -35,13 +35,15 @@ HelfrichMeshForceCompute::HelfrichMeshForceCompute(std::shared_ptr<SystemDefinit
     m_K = new Scalar[m_pdata->getNTypes()];
 
     // allocate memory for the per-type normal verctors
-    GlobalVector<Scalar3> tmp_sigma_dash(m_pdata->getN(), m_exec_conf);
+    GlobalVector<Scalar3> tmp_sigma_dash(m_pdata->getNGlobal(), m_exec_conf);
 
     m_sigma_dash.swap(tmp_sigma_dash);
     TAG_ALLOCATION(m_sigma_dash);
 
     // allocate memory for the per-type normal verctors
-    GlobalVector<Scalar> tmp_sigma(m_pdata->getN(), m_exec_conf);
+    
+
+    GlobalVector<Scalar> tmp_sigma(m_pdata->getNGlobal(), m_exec_conf);
 
     m_sigma.swap(tmp_sigma);
     TAG_ALLOCATION(m_sigma);
@@ -125,10 +127,6 @@ void HelfrichMeshForceCompute::computeForces(uint64_t timestep)
         m_mesh_data->getMeshBondData()->getMembersArray(),
         access_location::host,
         access_mode::read);
-    ArrayHandle<typename MeshTriangle::members_t> h_triangles(
-        m_mesh_data->getMeshTriangleData()->getMembersArray(),
-        access_location::host,
-        access_mode::read);
 
     ArrayHandle<Scalar> h_sigma(m_sigma, access_location::host, access_mode::read);
     ArrayHandle<Scalar3> h_sigma_dash(m_sigma_dash, access_location::host, access_mode::read);
@@ -139,7 +137,6 @@ void HelfrichMeshForceCompute::computeForces(uint64_t timestep)
     assert(h_pos.data);
     assert(h_rtag.data);
     assert(h_bonds.data);
-    assert(h_triangles.data);
     assert(h_sigma.data);
     assert(h_sigma_dash.data);
 
@@ -169,37 +166,21 @@ void HelfrichMeshForceCompute::computeForces(uint64_t timestep)
         unsigned int btag_b = bond.tag[1];
         assert(btag_b < m_pdata->getMaximumTag() + 1);
 
+        unsigned int btag_c = bond.tag[2];
+        assert(btag_c < m_pdata->getMaximumTag() + 1);
+        unsigned int btag_d = bond.tag[3];
+        assert(btag_d < m_pdata->getMaximumTag() + 1);
+
+        if (btag_c == btag_d)
+            continue;
+
         // transform a and b into indices into the particle data arrays
         // (MEM TRANSFER: 4 integers)
         unsigned int idx_a = h_rtag.data[btag_a];
         unsigned int idx_b = h_rtag.data[btag_b];
 
-        unsigned int tr_idx1 = bond.tag[2];
-        unsigned int tr_idx2 = bond.tag[3];
-
-        if (tr_idx1 == tr_idx2)
-            continue;
-
-        const typename MeshTriangle::members_t& triangle1 = h_triangles.data[tr_idx1];
-        const typename MeshTriangle::members_t& triangle2 = h_triangles.data[tr_idx2];
-
-        unsigned int idx_c = h_rtag.data[triangle1.tag[0]];
-
-        unsigned int iterator = 1;
-        while (idx_a == idx_c || idx_b == idx_c)
-            {
-            idx_c = h_rtag.data[triangle1.tag[iterator]];
-            iterator++;
-            }
-
-        unsigned int idx_d = h_rtag.data[triangle2.tag[0]];
-
-        iterator = 1;
-        while (idx_a == idx_d || idx_b == idx_d)
-            {
-            idx_d = h_rtag.data[triangle2.tag[iterator]];
-            iterator++;
-            }
+        unsigned int idx_c = h_rtag.data[btag_c];
+        unsigned int idx_d = h_rtag.data[btag_d];
 
         assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
         assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
@@ -445,10 +426,6 @@ void HelfrichMeshForceCompute::precomputeParameter()
         m_mesh_data->getMeshBondData()->getMembersArray(),
         access_location::host,
         access_mode::read);
-    ArrayHandle<typename MeshTriangle::members_t> h_triangles(
-        m_mesh_data->getMeshTriangleData()->getMembersArray(),
-        access_location::host,
-        access_mode::read);
 
     // get a local copy of the simulation box too
     const BoxDim& box = m_pdata->getGlobalBox();
@@ -471,41 +448,22 @@ void HelfrichMeshForceCompute::precomputeParameter()
         unsigned int btag_b = bond.tag[1];
         assert(btag_b < m_pdata->getMaximumTag() + 1);
 
+        unsigned int btag_c = bond.tag[2];
+        assert(btag_c < m_pdata->getMaximumTag() + 1);
+        unsigned int btag_d = bond.tag[3];
+        assert(btag_d < m_pdata->getMaximumTag() + 1);
+
+        if (btag_c == btag_d)
+            continue;
+
+
         // transform a and b into indices into the particle data arrays
         // (MEM TRANSFER: 4 integers)
         unsigned int idx_a = h_rtag.data[btag_a];
         unsigned int idx_b = h_rtag.data[btag_b];
 
-        unsigned int tr_idx1 = bond.tag[2];
-        unsigned int tr_idx2 = bond.tag[3];
-
-        if (tr_idx1 == tr_idx2)
-            continue;
-
-        const typename MeshTriangle::members_t& triangle1 = h_triangles.data[tr_idx1];
-        const typename MeshTriangle::members_t& triangle2 = h_triangles.data[tr_idx2];
-
-        unsigned int btag_c = triangle1.tag[0];
-        unsigned int idx_c = h_rtag.data[triangle1.tag[0]];
-
-        unsigned int iterator = 1;
-        while (idx_a == idx_c || idx_b == idx_c)
-            {
-            btag_c = triangle1.tag[iterator];
-            idx_c = h_rtag.data[triangle1.tag[iterator]];
-            iterator++;
-            }
-
-        unsigned int idx_d = h_rtag.data[triangle2.tag[0]];
-
-        unsigned int btag_d = triangle2.tag[0];
-        iterator = 1;
-        while (idx_a == idx_d || idx_b == idx_d)
-            {
-            btag_d = triangle2.tag[iterator];
-            idx_d = h_rtag.data[triangle2.tag[iterator]];
-            iterator++;
-            }
+        unsigned int idx_c = h_rtag.data[btag_c];
+        unsigned int idx_d = h_rtag.data[btag_d];
 
         assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
         assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
@@ -579,24 +537,6 @@ void HelfrichMeshForceCompute::precomputeParameter()
             c_addb = 1.0;
         if (c_addb < -1.0)
             c_addb = -1.0;
-
-        vec3<Scalar> nbac
-            = cross(vec3<Scalar>(nab.x, nab.y, nab.z), vec3<Scalar>(nac.x, nac.y, nac.z));
-
-        Scalar inv_nbac = 1.0 / sqrt(dot(nbac, nbac));
-
-        vec3<Scalar> nbad
-            = cross(vec3<Scalar>(nab.x, nab.y, nab.z), vec3<Scalar>(nad.x, nad.y, nad.z));
-
-        Scalar inv_nbad = 1.0 / sqrt(dot(nbad, nbad));
-
-        if (dot(nbac, nbad) * inv_nbad * inv_nbac > 0.9)
-            {
-            // this->m_exec_conf->msg->error() << "helfrich calculations : triangles " << tr_idx1
-            //                                 << " " << tr_idx2 << " overlap." << std::endl
-            //                                 << std::endl;
-            // throw std::runtime_error("Error in bending energy calculation");
-            }
 
         Scalar inv_s_accb = sqrt(1.0 - c_accb * c_accb);
         if (inv_s_accb < SMALL)
