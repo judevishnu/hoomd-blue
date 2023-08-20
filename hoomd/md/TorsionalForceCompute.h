@@ -50,9 +50,7 @@ struct torsional_sin_params
         v["d"] = d;
         v["n"] = n;
         v["phi0"] = phi_0;
-        v["torque"].x = t_q.x;
-        v["torque"].y = t_q.y;
-        v["torque"].z = t_q.z;
+        v["torque"] = make_scalar3(t_q.x,t_q.y,t_q.z);
         return v;
         }
 #endif
