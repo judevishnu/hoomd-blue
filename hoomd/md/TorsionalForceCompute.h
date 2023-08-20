@@ -35,7 +35,7 @@ struct torsional_sin_params
     Scalar3 t_q;
 
 #ifndef __HIPCC__
-    torsional_sin_params() : k(0.), d(0.), n(0), phi_0(0.), t_q(0.) { }
+    torsional_sin_params() : k(0.), d(0.), n(0), phi_0(0.), t_q(0.,0.,0.) { }
 
     torsional_sin_params(pybind11::dict v)
         : k(v["k"].cast<Scalar>()), d(v["d"].cast<Scalar>()), n(v["n"].cast<int>()),
