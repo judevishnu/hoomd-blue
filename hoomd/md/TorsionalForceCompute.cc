@@ -154,6 +154,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
 
     // for each of the dihedrals
     const unsigned int size = (unsigned int)m_dihedral_data->getN();
+    const unsigned int num_p_n = (unsigned int)(m_group1->getNumMembersGlobal() + m_group2->getNumMembersGlobal())
     for (unsigned int i = 0; i < size; i++)
         {
         // lookup the tag of each of the particles participating in the dihedral
@@ -171,48 +172,64 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
         unsigned int idp = m_group1->getMemberIndex(i);
         unsigned int idn = m_group2->getMemberIndex(i);
-        unsigned int taga = m_group1->getMemberTag(i);
-        unsigned int tagb = m_group2->getMemberTag(i);
+        unsigned int tagp = m_group1->getMemberTag(i);
+        unsigned int tagn = m_group2->getMemberTag(i);
+        unsigned int rtagp = h_rtag.data[tagp];
+        unsigned int rtagn = h_rtag.data[tagn];
+        unsigned int rtagpside;
+        unsigned int rtagnside;
+        if (rtagp == idx_b)
+            {
+              rtagpside = idx_a;
+              rtagnside = idx_d;
+            }
+        else if (rtagp == idx_c)
+            {
+              rtagpside = idx_d;
+              rtagnside = idx_a;
 
-        printf("dihedral particle ids %u %u %u %u %u %u %u %u \n",dihedral.tag[0],dihedral.tag[1],dihedral.tag[2],dihedral.tag[3],h_rtag.data[dihedral.tag[0]],h_rtag.data[dihedral.tag[1]],h_rtag.data[dihedral.tag[2]],h_rtag.data[dihedral.tag[3]]);
-        printf("group particle ids %u %u %u %u \n",idp,idn,h_rtag.data[idp],h_rtag.data[idn]);
-        printf("tag  %u %u %u %u %u %u \n",idp,idn,taga,tagb,h_rtag.data[taga],h_rtag.data[tagb]);
+            }
+
+
+        // printf("dihedral particle ids %u %u %u %u %u %u %u %u \n",dihedral.tag[0],dihedral.tag[1],dihedral.tag[2],dihedral.tag[3],h_rtag.data[dihedral.tag[0]],h_rtag.data[dihedral.tag[1]],h_rtag.data[dihedral.tag[2]],h_rtag.data[dihedral.tag[3]]);
+        // printf("group particle ids %u %u %u %u \n",idp,idn,h_rtag.data[idp],h_rtag.data[idn]);
+        // printf("tag  %u %u %u %u %u %u \n",idp,idn,taga,tagb,h_rtag.data[taga],h_rtag.data[tagb]);
 
         // throw an error if this angle is incomplete
-        // if (idx_a == NOT_LOCAL || idx_b == NOT_LOCAL || idx_c == NOT_LOCAL || idx_d == NOT_LOCAL)
-        //     {
-        //     this->m_exec_conf->msg->error()
-        //         << "torsional.sin: dihedral " << dihedral.tag[0] << " " << dihedral.tag[1]
-        //         << " " << dihedral.tag[2] << " " << dihedral.tag[3] << " incomplete." << endl
-        //         << endl;
-        //     throw std::runtime_error("Error in torsional calculation");
-        //     }
-        //
-        // assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
-        // assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
-        // assert(idx_c < m_pdata->getN() + m_pdata->getNGhosts());
-        // assert(idx_d < m_pdata->getN() + m_pdata->getNGhosts());
-        //
-        // // calculate d\vec{r}
-        // Scalar3 dab;
-        // dab.x = h_pos.data[idx_a].x - h_pos.data[idx_b].x;
-        // dab.y = h_pos.data[idx_a].y - h_pos.data[idx_b].y;
-        // dab.z = h_pos.data[idx_a].z - h_pos.data[idx_b].z;
+        if (idx_a == NOT_LOCAL || idx_b == NOT_LOCAL || idx_c == NOT_LOCAL || idx_d == NOT_LOCAL)
+            {
+            this->m_exec_conf->msg->error()
+                << "torsional.sin: dihedral " << dihedral.tag[0] << " " << dihedral.tag[1]
+                << " " << dihedral.tag[2] << " " << dihedral.tag[3] << " incomplete." << endl
+                << endl;
+            throw std::runtime_error("Error in torsional calculation");
+            }
+
+        assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
+        assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
+        assert(idx_c < m_pdata->getN() + m_pdata->getNGhosts());
+        assert(idx_d < m_pdata->getN() + m_pdata->getNGhosts());
+
+        // calculate d\vec{r}
+        Scalar3 dab;
+        dab.x = h_pos.data[rtagpside].x - h_pos.data[rtagp].x;
+        dab.y = h_pos.data[rtagpside].y - h_pos.data[rtagp].y;
+        dab.z = h_pos.data[rtagpside].z - h_pos.data[rtagp].z;
         //
         // Scalar3 dcb;
         // dcb.x = h_pos.data[idx_c].x - h_pos.data[idx_b].x;
         // dcb.y = h_pos.data[idx_c].y - h_pos.data[idx_b].y;
         // dcb.z = h_pos.data[idx_c].z - h_pos.data[idx_b].z;
         //
-        // Scalar3 ddc;
-        // ddc.x = h_pos.data[idx_d].x - h_pos.data[idx_c].x;
-        // ddc.y = h_pos.data[idx_d].y - h_pos.data[idx_c].y;
-        // ddc.z = h_pos.data[idx_d].z - h_pos.data[idx_c].z;
+        Scalar3 ddc;
+        ddc.x = h_pos.data[rtagnside].x - h_pos.data[rtagn].x;
+        ddc.y = h_pos.data[rtagnside].y - h_pos.data[rtagn].y;
+        ddc.z = h_pos.data[rtagnside].z - h_pos.data[rtagn].z;
         //
-        // // apply periodic boundary conditions
-        // dab = box.minImage(dab);
+        // apply periodic boundary conditions
+        dab = box.minImage(dab);
         // dcb = box.minImage(dcb);
-        // ddc = box.minImage(ddc);
+        ddc = box.minImage(ddc);
         //####################################################################################################
         // Scalar angl;
         // Scalar3 torq;
