@@ -171,8 +171,12 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
         unsigned int idp = m_group1->getMemberIndex(i);
         unsigned int idn = m_group2->getMemberIndex(i);
-        printf("dihedral particle ids %u %u %u %u %u %u %u %u \n",idx_a,idx_b,idx_c,idx_d,h_rtag.data[dihedral.tag[0]],h_rtag.data[dihedral.tag[1]],h_rtag.data[dihedral.tag[2]],h_rtag.data[dihedral.tag[3]]);
+        unsigned int taga = m_group1->getMemberTag(i);
+        unsigned int tagb = m_group2->getMemberTag(i);
+
+        printf("dihedral particle ids %u %u %u %u %u %u %u %u \n",dihedral.tag[0],dihedral.tag[1],dihedral.tag[2],dihedral.tag[3],h_rtag.data[dihedral.tag[0]],h_rtag.data[dihedral.tag[1]],h_rtag.data[dihedral.tag[2]],h_rtag.data[dihedral.tag[3]]);
         printf("group particle ids %u %u %u %u \n",idp,idn,h_rtag.data[idp],h_rtag.data[idn]);
+        printf("tag  %u %u %u %u %u %u \n",idp,idn,taga,tagb,h_rtag.data[taga],h_rtag.data[tagb]);
 
         // throw an error if this angle is incomplete
         // if (idx_a == NOT_LOCAL || idx_b == NOT_LOCAL || idx_c == NOT_LOCAL || idx_d == NOT_LOCAL)
