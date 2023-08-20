@@ -231,12 +231,13 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         // dcb = box.minImage(dcb);
         ddc = box.minImage(ddc);
         //####################################################################################################
-        // Scalar angl;
-        // Scalar3 torq;
-        // Scalar3 constT;
-        // torq.x = 0.0;
-        // torq.y = 0.0;
-        // torq.z = 0.0;
+        Scalar angl;
+        Scalar3 torqp;
+        Scalar3 torqn;
+        Scalar3 constT;
+        torqp.x = 0.0;
+        torqp.y = 0.0;
+        torqp.z = 0.0;
         //
         //
         // // Scalar cs = dab.x*dcd.x + dab.y*dcd.y + dab.z*dcd.z;
@@ -247,42 +248,49 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         //
         //
         //
-        // angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
-        // // Scalar cs = fast::cos(angl);
-        // // Scalar ss = fast::sin(angl);
-        // if (angl > M_PI)
-        //     {
-        //     angl -= 2 * M_PI;
-        //     }
-        // else if (angl <= -M_PI)
-        //     {
-        //     angl += 2 * M_PI;
-        //     }
-        //
+        angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
+        Scalar cs = fast::cos(angl);
+        Scalar ss = fast::sin(angl);
+        if (angl > M_PI)
+            {
+            angl -= 2 * M_PI;
+            }
+        else if (angl <= -M_PI)
+            {
+            angl += 2 * M_PI;
+            }
+
         // Scalar cs = fast::cos(angl);
         // Scalar ss = fast::sin(angl);
-        // if (angl> M_PI)
-        //     {
-        //     ss = fast::sin(angl- M_PI);
-        //     cs = fast::sin(angl- M_PI);
-        //     torq.x =  0.0 ;
-        //     torq.y =  0.0 ;
-        //     torq.z =  -2*m_K[dihedral_type]*cs*ss;
-        //     }
-        //     else if (angl < 0)
-        //     {
-        //     torq.x =  0.0 ;
-        //     torq.y =  0.0 ;
-        //     torq.z =  -2*m_K[dihedral_type]*cs*ss;
-        //     }
-        //     else if (angl == 0)
-        //     {
-        //     if (timestep < 1000)
-        //         {
-        //           torq.x =  0.0 ;
-        //           torq.y =  0.0 ;
-        //           torq.z =  m_T[dihedral_ty];
-        //         }
+        if (angl> M_PI)
+            {
+            ss = fast::sin(angl- M_PI);
+            cs = fast::sin(angl- M_PI);
+            torqp.x =  0.0 ;
+            torqp.y =  0.0 ;
+            torqp.z =  -2*m_K[dihedral_type]*cs*ss;
+            torqn.x =  0.0 ;
+            torqn.y =  0.0 ;
+            torqn.z =  2*m_K[dihedral_type]*cs*ss;
+            }
+            else if (angl < 0)
+            {
+            torqp.x =  0.0 ;
+            torqp.y =  0.0 ;
+            torqp.z =  -2*m_K[dihedral_type]*cs*ss;
+            torqn.x =  0.0 ;
+            torqn.y =  0.0 ;
+            torqn.z =  2*m_K[dihedral_type]*cs*ss;
+
+            }
+            else if (angl == 0)
+            {
+            if (timestep < 1000)
+                {
+                  torq.x =  0.0 ;
+                  torq.y =  0.0 ;
+                  torq.z =  m_T[dihedral_ty];
+                }
         //
         //     }
         //
