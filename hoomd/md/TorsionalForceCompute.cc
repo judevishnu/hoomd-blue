@@ -22,7 +22,7 @@ namespace md
     \post Memory is allocated, and forces are zeroed.
 */
 TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2)
-    : ForceCompute(sysdef), m_group1(group1), m_group2(group2), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_q(make_scalar3(0.,0.,0.))
+    : ForceCompute(sysdef), m_group1(group1), m_group2(group2), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_q(NULL)
     {
     m_exec_conf->msg->notice(5) << "Constructing TorsionalForceCompute" << endl;
 
@@ -83,9 +83,7 @@ void TorsionalForceCompute::setParams(unsigned int type,
     m_sign[type] = sign;
     m_multi[type] = multiplicity;
     m_phi_0[type] = phi_0;
-    m_t_q[type].x = t_q.x;
-    m_t_q[type].y = t_q.y;
-    m_t_q[type].z = t_q.z;
+    m_t_q[type] = make_scalar3(t_q.x,t_q.y,t_q.z);
 
     // check for some silly errors a user could make
     if (K <= 0)
