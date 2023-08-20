@@ -169,6 +169,22 @@ class Torsional(Dihedral):
             TypeParameterDict(k=float, d=float, n=int, phi0=float, torque=(0.,0.,0.), len_keys=1))
         self._add_typeparam(params)
 
+    def _attach(self):
+
+        # initialize the reflected c++ class
+        sim = self._simulation
+
+        if isinstance(sim.device, hoomd.device.CPU):
+            my_class = _md.TorsionalForceCompute
+        else:
+            my_class = _md.ActiveForceComputeGPU
+
+        self._cpp_obj = my_class(sim.state._cpp_sys_def,
+                                 sim.state._get_group(self.filter1),sim.state._get_group(self.filter2))
+
+        # Attach param_dict and typeparam_dict
+        super()._attach()
+
 
 def _table_eval(theta, V, T, width):
     dth = (2 * math.pi) / float(width - 1)
