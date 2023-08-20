@@ -103,6 +103,7 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
 #endif
 
     protected:
+    
     Scalar* m_K;     //!< K parameter for multiple dihedral tyes
     Scalar* m_sign;  //!< sign parameter for multiple dihedral types
     int* m_multi;    //!< multiplicity parameter for multiple dihedral types
