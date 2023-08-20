@@ -1,6 +1,7 @@
 
 
 set(_md_sources module-md.cc
+                   TorsionalForceCompute.cc
                    ActiveForceCompute.cc
                    ActiveRotationalDiffusionUpdater.cc
                    AlchemostatTwoStep.cc
@@ -53,7 +54,8 @@ set(_md_sources module-md.cc
                    ZeroMomentumUpdater.cc
                    )
 
-set(_md_headers ActiveForceComputeGPU.h
+set(_md_headers TorsionalForceCompute.h
+                ActiveForceComputeGPU.h
                 ActiveForceCompute.h
                 ActiveForceConstraintCompute.h
                 ActiveForceConstraintComputeGPU.h
