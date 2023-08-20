@@ -7,6 +7,7 @@
 #include <math.h>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 using namespace std;
 
