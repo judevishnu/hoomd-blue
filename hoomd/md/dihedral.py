@@ -43,7 +43,7 @@ Important:
 
 from hoomd.md import _md
 from hoomd.md.force import Force
-from hoomd.data.parameterdicts import TypeParameterDict
+from hoomd.data.parameterdicts import TypeParameterDict,ParameterDict
 from hoomd.data.typeparam import TypeParameter
 import hoomd
 
