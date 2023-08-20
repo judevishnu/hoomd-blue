@@ -44,7 +44,9 @@ Important:
 from hoomd.md import _md
 from hoomd.md.force import Force
 from hoomd.data.parameterdicts import TypeParameterDict,ParameterDict
+from hoomd.filter import ParticleFilter
 from hoomd.data.typeparam import TypeParameter
+from hoomd.data.typeconverter import OnlyTypes
 import hoomd
 
 import numpy
