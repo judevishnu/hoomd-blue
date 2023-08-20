@@ -171,7 +171,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
         unsigned int idp = m_group1->getMemberIndex(i);
         unsigned int idn = m_group2->getMemberIndex(i);
-        printf("Particle ids %u %u %u %u %u %u \n",idx_a,idx_b,idx_c,idx_d,idp,idn);
+        printf("Particle ids %u %u %u %u %u %u %u %u \n",idx_a,idx_b,idx_c,idx_d,idp,idn,h_rtag.data[idp],h_rtag.data[idn]);
 
         // throw an error if this angle is incomplete
         // if (idx_a == NOT_LOCAL || idx_b == NOT_LOCAL || idx_c == NOT_LOCAL || idx_d == NOT_LOCAL)
