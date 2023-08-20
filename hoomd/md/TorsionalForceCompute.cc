@@ -154,7 +154,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
 
     // for each of the dihedrals
     const unsigned int size = (unsigned int)m_dihedral_data->getN();
-    const unsigned int num_p_n = (unsigned int)(m_group1->getNumMembersGlobal() + m_group2->getNumMembersGlobal())
+    //const unsigned int num_p_n = (unsigned int)(m_group1->getNumMembersGlobal() + m_group2->getNumMembersGlobal())
     for (unsigned int i = 0; i < size; i++)
         {
         // lookup the tag of each of the particles participating in the dihedral
