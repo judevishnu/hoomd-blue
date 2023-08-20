@@ -273,7 +273,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
             torqn.y =  0.0 ;
             torqn.z =  2*m_K[dihedral_type]*cs*ss;
             }
-            else if (angl < 0)
+        else if (angl < 0)
             {
             torqp.x =  0.0 ;
             torqp.y =  0.0 ;
@@ -283,16 +283,24 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
             torqn.z =  2*m_K[dihedral_type]*cs*ss;
 
             }
-            else if (angl == 0)
+        else if (angl == 0)
             {
             if (timestep < 1000)
                 {
-                  torq.x =  0.0 ;
-                  torq.y =  0.0 ;
-                  torq.z =  m_T[dihedral_ty];
+                  torqp.x =  m_t_q[dihedral_type].x;
+                  torqp.y =  m_t_q[dihedral_type].y;
+                  torqp.z =  m_t_q[dihedral_type].z;
+                  torqn.x =  m_t_q[dihedral_type].x;
+                  torqn.y =  m_t_q[dihedral_type].y;
+                  torqn.z =  -m_t_q[dihedral_type].z;
                 }
-        //
-        //     }
+            }
+        h_torque.data[rtagp].x += torqp.x;
+        h_torque.data[rtagp].y += torqp.y;
+        h_torque.data[rtagp].z += torqp.z;
+        h_torque.data[rtagn].x += torqn.x;
+        h_torque.data[rtagn].y += torqn.y;
+        h_torque.data[rtagn].z += torqn.z;
         //
         // Scalar3 dcbm;
         // dcbm.x = -dcb.x;
