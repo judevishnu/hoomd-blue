@@ -178,6 +178,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int rtagn = h_rtag.data[tagn];
         unsigned int rtagpside;
         unsigned int rtagnside;
+        unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
         if (rtagp == idx_b)
             {
               rtagpside = idx_a;
