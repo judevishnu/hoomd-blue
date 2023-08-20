@@ -21,7 +21,7 @@ namespace md
 /*! \param sysdef System to compute forces on
     \post Memory is allocated, and forces are zeroed.
 */
-TorsionalForceCompute::HarmonicDihedralForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group)
+TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2)
     : ForceCompute(sysdef), m_group(group), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_q(make_scalar3(0.,0.,0.))
     {
     m_exec_conf->msg->notice(5) << "Constructing TorsionalForceCompute" << endl;
