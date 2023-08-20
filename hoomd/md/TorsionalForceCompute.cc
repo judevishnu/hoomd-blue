@@ -114,9 +114,7 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     params["d"] = m_sign[typ];
     params["n"] = m_multi[typ];
     params["phi0"] = m_phi_0[typ];
-    params["torque"].x = m_t_q[typ].x;
-    params["torque"].y = m_t_q[typ].y;
-    params["torque"].z = m_t_q[typ].z;
+    params["torque"] = make_scalar3(m_t_q[typ].x,m_t_q[typ].y,m_t_q[typ].z);
     return params;
     }
 
