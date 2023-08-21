@@ -252,14 +252,14 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
         Scalar cs = fast::cos(angl);
         Scalar ss = fast::sin(angl);
-        if (angl > M_PI)
-            {
-            angl -= 2 * M_PI;
-            }
-        else if (angl <= -M_PI)
-            {
-            angl += 2 * M_PI;
-            }
+        // if (angl > M_PI)
+        //     {
+        //     angl -= 2 * M_PI;
+        //     }
+        // else if (angl <= -M_PI)
+        //     {
+        //     angl += 2 * M_PI;
+        //     }
 
         // Scalar cs = fast::cos(angl);
         // Scalar ss = fast::sin(angl);
