@@ -183,11 +183,13 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
             {
               rtagpside = idx_a;
               rtagnside = idx_d;
+              rtagn = idx_c;
             }
         else if (rtagp == idx_c)
             {
               rtagpside = idx_d;
               rtagnside = idx_a;
+              rtagn = idx_b;
 
             }
 
