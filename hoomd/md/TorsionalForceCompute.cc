@@ -102,6 +102,7 @@ void TorsionalForceCompute::setParamsPython(std::string type, pybind11::dict par
     // make sure the type is valid
     auto typ = m_dihedral_data->getTypeByName(type);
     torsional_sin_params _params(params);
+    printf("%f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_q.x,_params.t_q.y,_params.t_q.z)
     setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_q);
     }
 
