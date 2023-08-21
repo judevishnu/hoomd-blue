@@ -183,7 +183,7 @@ class Torsional(Dihedral):
                                  sim.state._get_group(self.filter1),sim.state._get_group(self.filter2))
 
         # Attach param_dict and typeparam_dict
-        Force()._attach(self)
+        Force._attach(self)
 
 
 def _table_eval(theta, V, T, width):
