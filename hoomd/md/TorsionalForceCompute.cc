@@ -304,6 +304,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         h_torque.data[rtagn].x += torqn.x;
         h_torque.data[rtagn].y += torqn.y;
         h_torque.data[rtagn].z += torqn.z;
+        printf("%f %f %f  \n",angl,h_torque.data[rtagp].z,h_torque.data[rtagn].z)
         //
         // Scalar3 dcbm;
         // dcbm.x = -dcb.x;
