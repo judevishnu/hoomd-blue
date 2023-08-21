@@ -110,7 +110,7 @@ void TorsionalForceCompute::setParamsPython(std::string type, pybind11::dict par
     // make sure the type is valid
     auto typ = m_dihedral_data->getTypeByName(type);
     torsional_sin_params _params(params);
-    printf("%f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
+    printf("Iam set %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
     setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_qx, _params.t_qy, _params.t_qz);
     }
 
@@ -125,6 +125,8 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     params["tqx"] = m_t_qx[typ];
     params["tqy"] = m_t_qy[typ];
     params["tqz"] = m_t_qz[typ];
+    printf("I am get %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
+
     return params;
     }
 
@@ -134,6 +136,8 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
 void TorsionalForceCompute::computeForces(uint64_t timestep)
     {
     assert(m_pdata);
+    printf("I am computeForces %f %f %d %f %f %f %f \n",m_K, m_sign, m_multi, m_phi_0, m_t_qx, m_t_qy, m_t_qz);
+
     // access the particle data arrays
     ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
     ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
