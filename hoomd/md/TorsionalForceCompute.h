@@ -40,7 +40,7 @@ struct torsional_sin_params
 
     torsional_sin_params(pybind11::dict v)
         : k(v["k"].cast<Scalar>()), d(v["d"].cast<Scalar>()), n(v["n"].cast<int>()),
-          phi_0(v["phi0"].cast<Scalar>()), t_q(make_scalar3((v["torque"][0]).cast<Scalar>(),(v["torque"][1]).cast<Scalar>(),(v["torque"][2]).cast<Scalar>()))
+          phi_0(v["phi0"].cast<Scalar>()), t_q(make_scalar3((v["torque"][0,0]).cast<Scalar>(),(v["torque"][0,1]).cast<Scalar>(),(v["torque"][0,2]).cast<Scalar>()))
         {
         }
 
