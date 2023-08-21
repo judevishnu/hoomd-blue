@@ -23,7 +23,7 @@ namespace md
     \post Memory is allocated, and forces are zeroed.
 */
 TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2)
-    : ForceCompute(sysdef), m_group1(group1), m_group2(group2), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_q(NULL)
+    : ForceCompute(sysdef), m_group1(group1), m_group2(group2), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_qx(NULL), m_t_qy(NULL), m_t_qz(NULL)
     {
     m_exec_conf->msg->notice(5) << "Constructing TorsionalForceCompute" << endl;
 
@@ -41,7 +41,9 @@ TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> s
     m_sign = new Scalar[m_dihedral_data->getNTypes()];
     m_multi = new int[m_dihedral_data->getNTypes()];
     m_phi_0 = new Scalar[m_dihedral_data->getNTypes()];
-    m_t_q = new Scalar3[m_dihedral_data->getNTypes()];
+    m_t_qx = new Scalar[m_dihedral_data->getNTypes()];
+    m_t_qy = new Scalar[m_dihedral_data->getNTypes()];
+    m_t_qz = new Scalar[m_dihedral_data->getNTypes()];
 
     }
 
@@ -53,12 +55,16 @@ TorsionalForceCompute::~TorsionalForceCompute()
     delete[] m_sign;
     delete[] m_multi;
     delete[] m_phi_0;
-    delete[] m_t_q;
+    delete[] m_t_qx;
+    delete[] m_t_qy;
+    delete[] m_t_qz;
     m_K = NULL;
     m_sign = NULL;
     m_multi = NULL;
     m_phi_0 = NULL;
-    m_t_q = NULL;//make_scalar3(0.,0.,0.);
+    m_t_qx = NULL;//make_scalar3(0.,0.,0.);
+    m_t_qy = NULL;
+    m_t_qz = NULL;
     }
 
 /*! \param type Type of the dihedral to set parameters for
@@ -72,7 +78,7 @@ void TorsionalForceCompute::setParams(unsigned int type,
                                              Scalar K,
                                              Scalar sign,
                                              int multiplicity,
-                                             Scalar phi_0, Scalar3 t_q)
+                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz)
     {
     // make sure the type is valid
     if (type >= m_dihedral_data->getNTypes())
@@ -84,7 +90,9 @@ void TorsionalForceCompute::setParams(unsigned int type,
     m_sign[type] = sign;
     m_multi[type] = multiplicity;
     m_phi_0[type] = phi_0;
-    m_t_q[type] = make_scalar3(t_q.x,t_q.y,t_q.z);
+    m_t_qx[type] = t_qx;
+    m_t_qy[type] = t_qy;
+    m_t_qz[type] = t_qz;
 
     // check for some silly errors a user could make
     if (K <= 0)
@@ -102,8 +110,8 @@ void TorsionalForceCompute::setParamsPython(std::string type, pybind11::dict par
     // make sure the type is valid
     auto typ = m_dihedral_data->getTypeByName(type);
     torsional_sin_params _params(params);
-    printf("%f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_q.x,_params.t_q.y,_params.t_q.z);
-    setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_q);
+    printf("%f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
+    setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_qx, _params.t_qy, _params.t_qz);
     }
 
 pybind11::dict TorsionalForceCompute::getParams(std::string type)
@@ -114,7 +122,9 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     params["d"] = m_sign[typ];
     params["n"] = m_multi[typ];
     params["phi0"] = m_phi_0[typ];
-    params["torque"] = make_scalar3(m_t_q[typ].x,m_t_q[typ].y,m_t_q[typ].z);
+    params["tqx"] = m_t_qx[typ];
+    params["tqy"] = m_t_qy[typ];
+    params["tqz"] = m_t_qz[typ];
     return params;
     }
 
@@ -291,12 +301,12 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
             {
             if (timestep < 1000)
                 {
-                  torqp.x =  m_t_q[dihedral_type].x;
-                  torqp.y =  m_t_q[dihedral_type].y;
-                  torqp.z =  m_t_q[dihedral_type].z;
-                  torqn.x =  m_t_q[dihedral_type].x;
-                  torqn.y =  m_t_q[dihedral_type].y;
-                  torqn.z = -m_t_q[dihedral_type].z;
+                  torqp.x =  m_t_qx[dihedral_type];
+                  torqp.y =  m_t_qy[dihedral_type];
+                  torqp.z =  m_t_qz[dihedral_type];
+                  torqn.x =  m_t_qx[dihedral_type];
+                  torqn.y =  m_t_qy[dihedral_type];
+                  torqn.z = -m_t_qz[dihedral_type];
                 }
             }
         h_torque.data[rtagp].x += torqp.x;
