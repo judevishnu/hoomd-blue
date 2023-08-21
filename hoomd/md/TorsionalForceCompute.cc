@@ -125,7 +125,7 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     params["tqx"] = m_t_qx[typ];
     params["tqy"] = m_t_qy[typ];
     params["tqz"] = m_t_qz[typ];
-    printf("I am get %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
+    printf("I am get %f %f %d %f %f %f %f \n",params["k"], params["d"], params["n"], params["phi_0"], params["t_qx"],params["t_qy"],params["t_qz"]);
 
     return params;
     }
@@ -136,7 +136,6 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
 void TorsionalForceCompute::computeForces(uint64_t timestep)
     {
     assert(m_pdata);
-    printf("I am computeForces %f %f %d %f %f %f %f \n",m_K, m_sign, m_multi, m_phi_0, m_t_qx, m_t_qy, m_t_qz);
 
     // access the particle data arrays
     ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
@@ -194,6 +193,8 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int rtagpside;
         unsigned int rtagnside;
         unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
+        printf("I am computeForces %f %f %d %f %f %f %f \n",m_K[dihedral_type], m_sign[dihedral_type], m_multi[dihedral_type], m_phi_0[dihedral_type], m_t_qx[dihedral_type], m_t_qy[dihedral_type], m_t_qz[dihedral_type]);
+
         if (rtagp == idx_b)
             {
               rtagpside = idx_a;
