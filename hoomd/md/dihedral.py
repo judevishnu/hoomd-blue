@@ -156,7 +156,7 @@ class Torsional1(Dihedral):
         super().__init__()
         params = TypeParameter(
             'params', 'dihedral_types',
-            TypeParameterDict(k=float, d=float, n=int, phi0=float, filter1=ParticleFilter, filter2=ParticleFilter, len_keys=1))
+            TypeParameterDict(k=float, d=float, n=int, phi0=float,tqx=float,tqy=float,tqz=float, filter1=ParticleFilter, filter2=ParticleFilter, len_keys=1))
         self._add_typeparam(params)
 
 
