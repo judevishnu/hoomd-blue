@@ -44,7 +44,7 @@ struct torsional_sin_params
 
     torsional_sin_params(pybind11::dict v)
         : k(v["k"].cast<Scalar>()), d(v["d"].cast<Scalar>()), n(v["n"].cast<int>()),
-          phi_0(v["phi0"].cast<Scalar>()), t_qx(v["tqx"].cast<Scalar>()),t_qy(v["tqy"].cast<Scalar>()),t_qz(v["tqz"].cast<Scalar>(), group1(v["filter1"].cast<std::shared_ptr<ParticleGroup>>()), group2(v["filter2"].cast<std::shared_ptr<ParticleGroup>>())
+          phi_0(v["phi0"].cast<Scalar>()), t_qx(v["tqx"].cast<Scalar>()),t_qy(v["tqy"].cast<Scalar>()),t_qz(v["tqz"].cast<Scalar>()), group1(v["filter1"].cast<std::shared_ptr<ParticleGroup>>()), group2(v["filter2"].cast<std::shared_ptr<ParticleGroup>>())
         {
         }
 
