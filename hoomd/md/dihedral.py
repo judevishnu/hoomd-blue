@@ -121,6 +121,43 @@ class Harmonic(Dihedral):
             TypeParameterDict(k=float, d=float, n=int, phi0=float, len_keys=1))
         self._add_typeparam(params)
 
+class Torsional1(Dihedral):
+    r"""Harmonic dihedral force.
+
+    `Harmonic` computes forces, virials, and energies on all dihedrals in the
+    simulation state with:
+
+    .. math::
+
+        U(\phi) = \frac{1}{2}k \left( 1 + d \cos\left(n \phi - \phi_0 \right)
+               \right)
+
+    Attributes:
+        params (`TypeParameter` [``dihedral type``, `dict`]):
+            The parameter of the harmonic bonds for each dihedral type. The
+            dictionary has the following keys:
+
+            * ``k`` (`float`, **required**) - potential constant :math:`k`
+              :math:`[\mathrm{energy}]`
+            * ``d`` (`float`, **required**) - sign factor :math:`d`
+            * ``n`` (`int`, **required**) - angle multiplicity factor :math:`n`
+            * ``phi0`` (`float`, **required**) - phase shift :math:`\phi_0`
+              :math:`[\mathrm{radians}]`
+
+    Examples::
+
+        harmonic = dihedral.Harmonic()
+        harmonic.params['A-A-A-A'] = dict(k=3.0, d=-1, n=3, phi0=0)
+        harmonic.params['A-B-C-D'] = dict(k=100.0, d=1, n=4, phi0=math.pi/2)
+    """
+    _cpp_class_name = "TorsionalForceCompute1"
+
+    def __init__(self):
+        super().__init__()
+        params = TypeParameter(
+            'params', 'dihedral_types',
+            TypeParameterDict(k=float, d=float, n=int, phi0=float, filter1=ParticleFilter, filter2=ParticleFilter, len_keys=1))
+        self._add_typeparam(params)
 
 
 class Torsional(Dihedral):

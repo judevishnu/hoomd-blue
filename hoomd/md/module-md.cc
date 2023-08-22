@@ -9,6 +9,7 @@ namespace md
     {
 namespace detail
     {
+void export_TorsionalForceCompute1(pybind11::module& m);
 void export_TorsionalForceCompute(pybind11::module& m);
 void export_ActiveForceCompute(pybind11::module& m);
 void export_ActiveForceConstraintComputeCylinder(pybind11::module& m);
@@ -277,6 +278,7 @@ using namespace hoomd::md::detail;
 */
 PYBIND11_MODULE(_md, m)
     {
+    export_TorsionalForceCompute1(m);
     export_TorsionalForceCompute(m);
     export_ActiveForceCompute(m);
     export_ActiveForceConstraintComputeCylinder(m);

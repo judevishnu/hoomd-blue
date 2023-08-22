@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2023 The Regents of the University of Michigan.
 // Part of HOOMD-blue, released under the BSD 3-Clause License.
 
-#include "TorsionalForceCompute.h"
+#include "TorsionalForceCompute1.h"
 
 #include <iostream>
 #include <math.h>
@@ -22,8 +22,8 @@ namespace md
 /*! \param sysdef System to compute forces on
     \post Memory is allocated, and forces are zeroed.
 */
-TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2)
-    : ForceCompute(sysdef), m_group1(group1), m_group2(group2), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_qx(NULL), m_t_qy(NULL), m_t_qz(NULL)
+TorsionalForceCompute1::TorsionalForceCompute1(std::shared_ptr<SystemDefinition> sysdef)
+    : ForceCompute(sysdef), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_qx(NULL), m_t_qy(NULL), m_t_qz(NULL), m_group1(NULL), m_group2(NULL)
     {
     m_exec_conf->msg->notice(5) << "Constructing TorsionalForceCompute" << endl;
 
@@ -44,11 +44,13 @@ TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> s
     m_t_qx = new Scalar[m_dihedral_data->getNTypes()];
     m_t_qy = new Scalar[m_dihedral_data->getNTypes()];
     m_t_qz = new Scalar[m_dihedral_data->getNTypes()];
+    m_group1 = new std::shared_ptr<ParticleGroup>[m_dihedral_data->getNTypes()];
+    m_group2 = new std::shared_ptr<ParticleGroup>[m_dihedral_data->getNTypes()];
     //m_array_angles = new Scalar[m_dihedral_data->getN()]
 
     }
 
-TorsionalForceCompute::~TorsionalForceCompute()
+TorsionalForceCompute1::~TorsionalForceCompute1()
     {
     m_exec_conf->msg->notice(5) << "Destroying TorsionalForceCompute" << endl;
 
@@ -66,6 +68,8 @@ TorsionalForceCompute::~TorsionalForceCompute()
     m_t_qx = NULL;//make_scalar3(0.,0.,0.);
     m_t_qy = NULL;
     m_t_qz = NULL;
+    m_group2 = NULL;
+    m_group1 = NULL;
     }
 
 /*! \param type Type of the dihedral to set parameters for
@@ -75,11 +79,11 @@ TorsionalForceCompute::~TorsionalForceCompute()
 
     Sets parameters for the potential of a particular dihedral type
 */
-void TorsionalForceCompute::setParams(unsigned int type,
+void TorsionalForceCompute1::setParams(unsigned int type,
                                              Scalar K,
                                              Scalar sign,
                                              int multiplicity,
-                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz)
+                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz, std::shared_ptr<ParticleGroup> group1, std::shared_ptr<ParticleGroup> group2)
     {
     // make sure the type is valid
     if (type >= m_dihedral_data->getNTypes())
@@ -94,6 +98,8 @@ void TorsionalForceCompute::setParams(unsigned int type,
     m_t_qx[type] = t_qx;
     m_t_qy[type] = t_qy;
     m_t_qz[type] = t_qz;
+    m_group1[type] = group1;
+    m_group2[type] = group2;
 
     // check for some silly errors a user could make
     if (K <= 0)
@@ -106,16 +112,16 @@ void TorsionalForceCompute::setParams(unsigned int type,
             << "torsional.sin: specified phi_0 outside [0, 2pi)" << endl;
     }
 
-void TorsionalForceCompute::setParamsPython(std::string type, pybind11::dict params)
+void TorsionalForceCompute1::setParamsPython(std::string type, pybind11::dict params)
     {
     // make sure the type is valid
     auto typ = m_dihedral_data->getTypeByName(type);
     torsional_sin_params _params(params);
-    printf("Iam set %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
-    setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_qx, _params.t_qy, _params.t_qz);
+    //printf("Iam set %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
+    setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_qx, _params.t_qy, _params.t_qz, _params.group1, _params.group2);
     }
 
-pybind11::dict TorsionalForceCompute::getParams(std::string type)
+pybind11::dict TorsionalForceCompute1::getParams(std::string type)
     {
     auto typ = m_dihedral_data->getTypeByName(type);
     pybind11::dict params;
@@ -126,7 +132,9 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     params["tqx"] = m_t_qx[typ];
     params["tqy"] = m_t_qy[typ];
     params["tqz"] = m_t_qz[typ];
-    printf("I am get %f %f %d %f %f %f %f \n",params["k"], params["d"], params["n"], params["phi_0"], params["t_qx"],params["t_qy"],params["t_qz"]);
+    params["filter1"] = m_group1[typ];
+    params["filter2"] = m_group2[typ];
+    //printf("I am get %f %f %d %f %f %f %f \n",params["k"], params["d"], params["n"], params["phi_0"], params["t_qx"],params["t_qy"],params["t_qz"]);
 
     return params;
     }
@@ -134,195 +142,195 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
 /*! Actually perform the force computation
     \param timestep Current time step
  */
-void TorsionalForceCompute::computeForces(uint64_t timestep)
+void TorsionalForceCompute1::computeForces(uint64_t timestep)
     {
     assert(m_pdata);
 
     // access the particle data arrays
-    ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
-    ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
-
-    //Change force to Torque
-    //ArrayHandle<Scalar4> h_force(m_force, access_location::host, access_mode::overwrite);
-    ArrayHandle<Scalar4> h_torque(m_torque, access_location::host, access_mode::overwrite);
-
-    //ArrayHandle<Scalar> h_virial(m_virial, access_location::host, access_mode::overwrite);
-
-    // Zero data for force calculation.
-    //memset((void*)h_force.data, 0, sizeof(Scalar4) * m_force.getNumElements());
-    memset((void*)h_torque.data, 0, sizeof(Scalar4) * m_torque.getNumElements());
-
-    //memset((void*)h_virial.data, 0, sizeof(Scalar) * m_virial.getNumElements());
-
-    // there are enough other checks on the input data: but it doesn't hurt to be safe
-    //assert(h_force.data);
-    assert(h_torque.data);
-
-    //assert(h_virial.data);
-    assert(h_pos.data);
-    assert(h_rtag.data);
-
-    size_t virial_pitch = m_virial.getPitch();
-
-    // get a local copy of the simulation box too
-    const BoxDim& box = m_pdata->getBox();
-
-    // for each of the dihedrals
-    const unsigned int size = (unsigned int)m_dihedral_data->getN();
-    //const unsigned int num_p_n = (unsigned int)(m_group1->getNumMembersGlobal() + m_group2->getNumMembersGlobal())
-    for (unsigned int i = 0; i < size; i++)
-        {
-        // lookup the tag of each of the particles participating in the dihedral
-        const ImproperData::members_t& dihedral = m_dihedral_data->getMembersByIndex(i);
-        assert(dihedral.tag[0] <= m_pdata->getMaximumTag());
-        assert(dihedral.tag[1] <= m_pdata->getMaximumTag());
-        assert(dihedral.tag[2] <= m_pdata->getMaximumTag());
-        assert(dihedral.tag[3] <= m_pdata->getMaximumTag());
-
-        // transform a, b, and c into indices into the particle data arrays
-        // MEM TRANSFER: 6 ints
-        unsigned int idx_a = h_rtag.data[dihedral.tag[0]];
-        unsigned int idx_b = h_rtag.data[dihedral.tag[1]];
-        unsigned int idx_c = h_rtag.data[dihedral.tag[2]];
-        unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
-        unsigned int idp = m_group1->getMemberIndex(i);
-        unsigned int idn = m_group2->getMemberIndex(i);
-        unsigned int tagp = m_group1->getMemberTag(i);
-        unsigned int tagn = m_group2->getMemberTag(i);
-        unsigned int rtagp = h_rtag.data[tagp];
-        unsigned int rtagn = h_rtag.data[tagn];
-        unsigned int rtagpside;
-        unsigned int rtagnside;
-        unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
-        printf("I am computeForces %f %f %d %f %f %f %f \n",m_K[dihedral_type], m_sign[dihedral_type], m_multi[dihedral_type], m_phi_0[dihedral_type], m_t_qx[dihedral_type], m_t_qy[dihedral_type], m_t_qz[dihedral_type]);
-
-        if (rtagp == idx_b)
-            {
-              rtagpside = idx_a;
-              rtagnside = idx_d;
-              rtagn = idx_c;
-            }
-        else if (rtagp == idx_c)
-            {
-              rtagpside = idx_d;
-              rtagnside = idx_a;
-              rtagn = idx_b;
-
-            }
-
-
-        // printf("dihedral particle ids %u %u %u %u %u %u %u %u \n",dihedral.tag[0],dihedral.tag[1],dihedral.tag[2],dihedral.tag[3],h_rtag.data[dihedral.tag[0]],h_rtag.data[dihedral.tag[1]],h_rtag.data[dihedral.tag[2]],h_rtag.data[dihedral.tag[3]]);
-        // printf("group particle ids %u %u %u %u \n",idp,idn,h_rtag.data[idp],h_rtag.data[idn]);
-        // printf("tag  %u %u %u %u %u %u \n",idp,idn,taga,tagb,h_rtag.data[taga],h_rtag.data[tagb]);
-
-        // throw an error if this angle is incomplete
-        if (idx_a == NOT_LOCAL || idx_b == NOT_LOCAL || idx_c == NOT_LOCAL || idx_d == NOT_LOCAL)
-            {
-            this->m_exec_conf->msg->error()
-                << "torsional.sin: dihedral " << dihedral.tag[0] << " " << dihedral.tag[1]
-                << " " << dihedral.tag[2] << " " << dihedral.tag[3] << " incomplete." << endl
-                << endl;
-            throw std::runtime_error("Error in torsional calculation");
-            }
-
-        assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
-        assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
-        assert(idx_c < m_pdata->getN() + m_pdata->getNGhosts());
-        assert(idx_d < m_pdata->getN() + m_pdata->getNGhosts());
-
-        // calculate d\vec{r}
-        Scalar3 dab;
-        dab.x = h_pos.data[rtagpside].x - h_pos.data[rtagp].x;
-        dab.y = h_pos.data[rtagpside].y - h_pos.data[rtagp].y;
-        dab.z = h_pos.data[rtagpside].z - h_pos.data[rtagp].z;
-        //
-        // Scalar3 dcb;
-        // dcb.x = h_pos.data[idx_c].x - h_pos.data[idx_b].x;
-        // dcb.y = h_pos.data[idx_c].y - h_pos.data[idx_b].y;
-        // dcb.z = h_pos.data[idx_c].z - h_pos.data[idx_b].z;
-        //
-        Scalar3 ddc;
-        ddc.x = h_pos.data[rtagnside].x - h_pos.data[rtagn].x;
-        ddc.y = h_pos.data[rtagnside].y - h_pos.data[rtagn].y;
-        ddc.z = h_pos.data[rtagnside].z - h_pos.data[rtagn].z;
-        //
-        // apply periodic boundary conditions
-        dab = box.minImage(dab);
-        // dcb = box.minImage(dcb);
-        ddc = box.minImage(ddc);
-        //####################################################################################################
-        Scalar angl;
-        Scalar3 torqp;
-        Scalar3 torqn;
-        Scalar3 constT;
-        torqp.x = 0.0;
-        torqp.y = 0.0;
-        torqp.z = 0.0;
-        //
-        //
-        // // Scalar cs = dab.x*dcd.x + dab.y*dcd.y + dab.z*dcd.z;
-        // // Scalar rsqdab = dab.x*dab.x + dab.y*dab.y + dab.z*dab.z;
-        // // Scalar rdab = sqrt(rsqdab);
-        // // Scalar rsqddc = ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z;
-        // // Scalar rddc = sqrt(rsqddc);
-        //
-        //
-        //
-        angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
-        Scalar cs = fast::cos(angl);
-        Scalar ss = fast::sin(angl);
-        // if (angl > M_PI)
-        //     {
-        //     angl -= 2 * M_PI;
-        //     }
-        // else if (angl <= -M_PI)
-        //     {
-        //     angl += 2 * M_PI;
-        //     }
-
-        // Scalar cs = fast::cos(angl);
-        // Scalar ss = fast::sin(angl);
-        if (angl> M_PI)
-            {
-            ss = fast::sin(angl- M_PI);
-            cs = fast::sin(angl- M_PI);
-            torqp.x =  0.0 ;
-            torqp.y =  0.0 ;
-            torqp.z =  -2*m_K[dihedral_type]*cs*ss;
-            torqn.x =  0.0 ;
-            torqn.y =  0.0 ;
-            torqn.z =  2*m_K[dihedral_type]*cs*ss;
-            }
-        else if (angl < 0)
-            {
-            torqp.x =  0.0 ;
-            torqp.y =  0.0 ;
-            torqp.z =  -2*m_K[dihedral_type]*cs*ss;
-            torqn.x =  0.0 ;
-            torqn.y =  0.0 ;
-            torqn.z =  2*m_K[dihedral_type]*cs*ss;
-
-            }
-        else if (angl == 0)
-            {
-            if (timestep < 1000)
-                {
-                  torqp.x =  m_t_qx[dihedral_type];
-                  torqp.y =  m_t_qy[dihedral_type];
-                  torqp.z =  m_t_qz[dihedral_type];
-                  torqn.x =  m_t_qx[dihedral_type];
-                  torqn.y =  m_t_qy[dihedral_type];
-                  torqn.z = -m_t_qz[dihedral_type];
-                }
-            }
-        h_torque.data[rtagp].x += torqp.x;
-        h_torque.data[rtagp].y += torqp.y;
-        h_torque.data[rtagp].z += torqp.z;
-        h_torque.data[rtagp].w = 0;
-        h_torque.data[rtagn].x += torqn.x;
-        h_torque.data[rtagn].y += torqn.y;
-        h_torque.data[rtagn].z += torqn.z;
-        h_torque.data[rtagn].w = 0
+    // ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
+    // ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
+    //
+    // //Change force to Torque
+    // //ArrayHandle<Scalar4> h_force(m_force, access_location::host, access_mode::overwrite);
+    // ArrayHandle<Scalar4> h_torque(m_torque, access_location::host, access_mode::overwrite);
+    //
+    // //ArrayHandle<Scalar> h_virial(m_virial, access_location::host, access_mode::overwrite);
+    //
+    // // Zero data for force calculation.
+    // //memset((void*)h_force.data, 0, sizeof(Scalar4) * m_force.getNumElements());
+    // memset((void*)h_torque.data, 0, sizeof(Scalar4) * m_torque.getNumElements());
+    //
+    // //memset((void*)h_virial.data, 0, sizeof(Scalar) * m_virial.getNumElements());
+    //
+    // // there are enough other checks on the input data: but it doesn't hurt to be safe
+    // //assert(h_force.data);
+    // assert(h_torque.data);
+    //
+    // //assert(h_virial.data);
+    // assert(h_pos.data);
+    // assert(h_rtag.data);
+    //
+    // size_t virial_pitch = m_virial.getPitch();
+    //
+    // // get a local copy of the simulation box too
+    // const BoxDim& box = m_pdata->getBox();
+    //
+    // // for each of the dihedrals
+    // const unsigned int size = (unsigned int)m_dihedral_data->getN();
+    // //const unsigned int num_p_n = (unsigned int)(m_group1->getNumMembersGlobal() + m_group2->getNumMembersGlobal())
+    // for (unsigned int i = 0; i < size; i++)
+    //     {
+    //     // lookup the tag of each of the particles participating in the dihedral
+    //     const ImproperData::members_t& dihedral = m_dihedral_data->getMembersByIndex(i);
+    //     assert(dihedral.tag[0] <= m_pdata->getMaximumTag());
+    //     assert(dihedral.tag[1] <= m_pdata->getMaximumTag());
+    //     assert(dihedral.tag[2] <= m_pdata->getMaximumTag());
+    //     assert(dihedral.tag[3] <= m_pdata->getMaximumTag());
+    //
+    //     // transform a, b, and c into indices into the particle data arrays
+    //     // MEM TRANSFER: 6 ints
+    //     unsigned int idx_a = h_rtag.data[dihedral.tag[0]];
+    //     unsigned int idx_b = h_rtag.data[dihedral.tag[1]];
+    //     unsigned int idx_c = h_rtag.data[dihedral.tag[2]];
+    //     unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
+    //     unsigned int idp = m_group1->getMemberIndex(i);
+    //     unsigned int idn = m_group2->getMemberIndex(i);
+    //     unsigned int tagp = m_group1->getMemberTag(i);
+    //     unsigned int tagn = m_group2->getMemberTag(i);
+    //     unsigned int rtagp = h_rtag.data[tagp];
+    //     unsigned int rtagn = h_rtag.data[tagn];
+    //     unsigned int rtagpside;
+    //     unsigned int rtagnside;
+    //     unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
+    //     printf("I am computeForces %f %f %d %f %f %f %f \n",m_K[dihedral_type], m_sign[dihedral_type], m_multi[dihedral_type], m_phi_0[dihedral_type], m_t_qx[dihedral_type], m_t_qy[dihedral_type], m_t_qz[dihedral_type]);
+    //
+    //     if (rtagp == idx_b)
+    //         {
+    //           rtagpside = idx_a;
+    //           rtagnside = idx_d;
+    //           rtagn = idx_c;
+    //         }
+    //     else if (rtagp == idx_c)
+    //         {
+    //           rtagpside = idx_d;
+    //           rtagnside = idx_a;
+    //           rtagn = idx_b;
+    //
+    //         }
+    //
+    //
+    //     // printf("dihedral particle ids %u %u %u %u %u %u %u %u \n",dihedral.tag[0],dihedral.tag[1],dihedral.tag[2],dihedral.tag[3],h_rtag.data[dihedral.tag[0]],h_rtag.data[dihedral.tag[1]],h_rtag.data[dihedral.tag[2]],h_rtag.data[dihedral.tag[3]]);
+    //     // printf("group particle ids %u %u %u %u \n",idp,idn,h_rtag.data[idp],h_rtag.data[idn]);
+    //     // printf("tag  %u %u %u %u %u %u \n",idp,idn,taga,tagb,h_rtag.data[taga],h_rtag.data[tagb]);
+    //
+    //     // throw an error if this angle is incomplete
+    //     if (idx_a == NOT_LOCAL || idx_b == NOT_LOCAL || idx_c == NOT_LOCAL || idx_d == NOT_LOCAL)
+    //         {
+    //         this->m_exec_conf->msg->error()
+    //             << "torsional.sin: dihedral " << dihedral.tag[0] << " " << dihedral.tag[1]
+    //             << " " << dihedral.tag[2] << " " << dihedral.tag[3] << " incomplete." << endl
+    //             << endl;
+    //         throw std::runtime_error("Error in torsional calculation");
+    //         }
+    //
+    //     assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
+    //     assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
+    //     assert(idx_c < m_pdata->getN() + m_pdata->getNGhosts());
+    //     assert(idx_d < m_pdata->getN() + m_pdata->getNGhosts());
+    //
+    //     // calculate d\vec{r}
+    //     Scalar3 dab;
+    //     dab.x = h_pos.data[rtagpside].x - h_pos.data[rtagp].x;
+    //     dab.y = h_pos.data[rtagpside].y - h_pos.data[rtagp].y;
+    //     dab.z = h_pos.data[rtagpside].z - h_pos.data[rtagp].z;
+    //     //
+    //     // Scalar3 dcb;
+    //     // dcb.x = h_pos.data[idx_c].x - h_pos.data[idx_b].x;
+    //     // dcb.y = h_pos.data[idx_c].y - h_pos.data[idx_b].y;
+    //     // dcb.z = h_pos.data[idx_c].z - h_pos.data[idx_b].z;
+    //     //
+    //     Scalar3 ddc;
+    //     ddc.x = h_pos.data[rtagnside].x - h_pos.data[rtagn].x;
+    //     ddc.y = h_pos.data[rtagnside].y - h_pos.data[rtagn].y;
+    //     ddc.z = h_pos.data[rtagnside].z - h_pos.data[rtagn].z;
+    //     //
+    //     // apply periodic boundary conditions
+    //     dab = box.minImage(dab);
+    //     // dcb = box.minImage(dcb);
+    //     ddc = box.minImage(ddc);
+    //     //####################################################################################################
+    //     Scalar angl;
+    //     Scalar3 torqp;
+    //     Scalar3 torqn;
+    //     Scalar3 constT;
+    //     torqp.x = 0.0;
+    //     torqp.y = 0.0;
+    //     torqp.z = 0.0;
+    //     //
+    //     //
+    //     // // Scalar cs = dab.x*dcd.x + dab.y*dcd.y + dab.z*dcd.z;
+    //     // // Scalar rsqdab = dab.x*dab.x + dab.y*dab.y + dab.z*dab.z;
+    //     // // Scalar rdab = sqrt(rsqdab);
+    //     // // Scalar rsqddc = ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z;
+    //     // // Scalar rddc = sqrt(rsqddc);
+    //     //
+    //     //
+    //     //
+    //     angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
+    //     Scalar cs = fast::cos(angl);
+    //     Scalar ss = fast::sin(angl);
+    //     // if (angl > M_PI)
+    //     //     {
+    //     //     angl -= 2 * M_PI;
+    //     //     }
+    //     // else if (angl <= -M_PI)
+    //     //     {
+    //     //     angl += 2 * M_PI;
+    //     //     }
+    //
+    //     // Scalar cs = fast::cos(angl);
+    //     // Scalar ss = fast::sin(angl);
+    //     if (angl> M_PI)
+    //         {
+    //         ss = fast::sin(angl- M_PI);
+    //         cs = fast::sin(angl- M_PI);
+    //         torqp.x =  0.0 ;
+    //         torqp.y =  0.0 ;
+    //         torqp.z =  -2*m_K[dihedral_type]*cs*ss;
+    //         torqn.x =  0.0 ;
+    //         torqn.y =  0.0 ;
+    //         torqn.z =  2*m_K[dihedral_type]*cs*ss;
+    //         }
+    //     else if (angl < 0)
+    //         {
+    //         torqp.x =  0.0 ;
+    //         torqp.y =  0.0 ;
+    //         torqp.z =  -2*m_K[dihedral_type]*cs*ss;
+    //         torqn.x =  0.0 ;
+    //         torqn.y =  0.0 ;
+    //         torqn.z =  2*m_K[dihedral_type]*cs*ss;
+    //
+    //         }
+    //     else if (angl == 0)
+    //         {
+    //         if (timestep < 1000)
+    //             {
+    //               torqp.x =  m_t_qx[dihedral_type];
+    //               torqp.y =  m_t_qy[dihedral_type];
+    //               torqp.z =  m_t_qz[dihedral_type];
+    //               torqn.x =  m_t_qx[dihedral_type];
+    //               torqn.y =  m_t_qy[dihedral_type];
+    //               torqn.z = -m_t_qz[dihedral_type];
+    //             }
+    //         }
+    //     h_torque.data[rtagp].x += torqp.x;
+    //     h_torque.data[rtagp].y += torqp.y;
+    //     h_torque.data[rtagp].z += torqp.z;
+    //     h_torque.data[rtagp].w = 0;
+    //     h_torque.data[rtagn].x += torqn.x;
+    //     h_torque.data[rtagn].y += torqn.y;
+    //     h_torque.data[rtagn].z += torqn.z;
+    //     h_torque.data[rtagn].w = 0
 
         //printf("%f %f %f %f %f %f %f %f\n",angl,h_torque.data[rtagp].z,h_torque.data[rtagn].z,torqp.z,torqn.z,m_K[dihedral_type],ss,cs);
         //
@@ -491,21 +499,15 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
 
 namespace detail
     {
-void export_TorsionalForceCompute(pybind11::module& m)
+void export_TorsionalForceCompute1(pybind11::module& m)
     {
-    pybind11::class_<TorsionalForceCompute,
+    pybind11::class_<TorsionalForceCompute1,
                      ForceCompute,
-                     std::shared_ptr<TorsionalForceCompute>>(m,
-                                                                    "TorsionalForceCompute")
-        .def(pybind11::init<std::shared_ptr<SystemDefinition>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>>())
-        .def("setParams", &TorsionalForceCompute::setParamsPython)
-        .def("getParams", &TorsionalForceCompute::getParams)
-        .def_property_readonly("filter1",
-                               [](TorsionalForceCompute& force)
-                               { return force.getGroup1()->getFilter(); })
-        .def_property_readonly("filter2",
-                               [](TorsionalForceCompute& force)
-                               { return force.getGroup2()->getFilter(); });
+                     std::shared_ptr<TorsionalForceCompute1>>(m,
+                                                                    "TorsionalForceCompute1")
+        .def(pybind11::init<std::shared_ptr<SystemDefinition>>())
+        .def("setParams", &TorsionalForceCompute1::setParamsPython)
+        .def("getParams", &TorsionalForceCompute1::getParams);
     }
 
     } // end namespace detail

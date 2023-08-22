@@ -20,8 +20,8 @@
 
 #include <pybind11/pybind11.h>
 
-#ifndef __TORSIONALFORCECOMPUTE_H__
-#define __TORSIONALFORCECOMPUTE_H__
+#ifndef __TORSIONALFORCECOMPUTE1_H__
+#define __TORSIONALFORCECOMPUTE1_H__
 
 namespace hoomd
     {
@@ -36,13 +36,15 @@ struct torsional_sin_params
     Scalar t_qx;
     Scalar t_qy;
     Scalar t_qz;
+    std::shared_ptr<ParticleGroup> group1;
+    std::shared_ptr<ParticleGroup> group2;
 
 #ifndef __HIPCC__
-    torsional_sin_params() : k(0.), d(0.), n(0), phi_0(0.), t_qx(0.), t_qy(0.), t_qz(0.) { }
+    torsional_sin_params() : k(0.), d(0.), n(0), phi_0(0.), t_qx(0.), t_qy(0.), t_qz(0.), group1(), group2() { }
 
     torsional_sin_params(pybind11::dict v)
         : k(v["k"].cast<Scalar>()), d(v["d"].cast<Scalar>()), n(v["n"].cast<int>()),
-          phi_0(v["phi0"].cast<Scalar>()), t_qx(v["tqx"].cast<Scalar>()),t_qy(v["tqy"].cast<Scalar>()),t_qz(v["tqz"].cast<Scalar>())
+          phi_0(v["phi0"].cast<Scalar>()), t_qx(v["tqx"].cast<Scalar>()),t_qy(v["tqy"].cast<Scalar>()),t_qz(v["tqz"].cast<Scalar>(), group1(v["filter1"].cast<std::shared_ptr<ParticleGroup>>()), group2(v["filter2"].cast<std::shared_ptr<ParticleGroup>>()))
         {
         }
 
@@ -56,6 +58,8 @@ struct torsional_sin_params
         v["tqx"] = t_qx;
         v["tqy"] = t_qy;
         v["tqz"] = t_qz;
+        v["filter1"] = group1;
+        v["filter2"] = group2;
         return v;
         }
 #endif
@@ -67,32 +71,33 @@ struct torsional_sin_params
     The dihedrals which forces are computed on are accessed from ParticleData::getDihedralData
     \ingroup computes
 */
-class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
+class PYBIND11_EXPORT TorsionalForceCompute1 : public ForceCompute
     {
     public:
     //! Constructs the compute
-    TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2);
+    TorsionalForceCompute1(std::shared_ptr<SystemDefinition> sysdef);
 
     //! Destructor
-    virtual ~TorsionalForceCompute();
+    virtual ~TorsionalForceCompute1();
 
     //! Set the parameters
     virtual void
-    setParams(unsigned int type, Scalar K, Scalar sign, int multiplicity, Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz);
+    setParams(unsigned int type, Scalar K, Scalar sign, int multiplicity, Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz, std::shared_ptr<ParticleGroup> group1,
+    std::shared_ptr<ParticleGroup> group2);
 
     virtual void setParamsPython(std::string type, pybind11::dict params);
 
     /// Get the parameters for a particular type
     pybind11::dict getParams(std::string type);
 
-    std::shared_ptr<ParticleGroup>& getGroup1()
-        {
-        return m_group1;
-        }
-    std::shared_ptr<ParticleGroup>& getGroup2()
-        {
-        return m_group2;
-        }
+    // std::shared_ptr<ParticleGroup>& getGroup1()
+    //     {
+    //     return m_group1;
+    //     }
+    // std::shared_ptr<ParticleGroup>& getGroup2()
+    //     {
+    //     return m_group2;
+    //     }
 
 #ifdef ENABLE_MPI
     //! Get ghost particle fields requested by this pair potential
@@ -119,8 +124,8 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
     //Scalar* m_array_angles;
 
     std::shared_ptr<DihedralData> m_dihedral_data; //!< Dihedral data to use in computing dihedrals
-    std::shared_ptr<ParticleGroup> m_group1; //!< Group of particles on which this force is applied
-    std::shared_ptr<ParticleGroup> m_group2; //!< Group of particles on which this force is applied
+    std::shared_ptr<ParticleGroup>* m_group1; //!< Group of particles on which this force is applied
+    std::shared_ptr<ParticleGroup>* m_group2; //!< Group of particles on which this force is applied
     //! Actually compute the forces
     virtual void computeForces(uint64_t timestep);
     };
