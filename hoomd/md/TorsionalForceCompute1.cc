@@ -494,7 +494,7 @@ void TorsionalForceCompute1::computeForces(uint64_t timestep)
         // h_force.data[idx_d].w += dihedral_eng;
         // for (int k = 0; k < 6; k++)
         //     h_virial.data[virial_pitch * k + idx_d] += dihedral_virial[k];
-        }
+        //}
     }
 
 namespace detail
