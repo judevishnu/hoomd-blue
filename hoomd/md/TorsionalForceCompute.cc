@@ -89,7 +89,7 @@ void TorsionalForceCompute::setParams(unsigned int type,
                                              Scalar K,
                                              Scalar sign,
                                              int multiplicity,
-                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz)
+                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz, int nang)
     {
     // make sure the type is valid
     if (type >= m_dihedral_data->getNTypes())
@@ -216,7 +216,7 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     params["tqx"] = m_t_qx[typ];
     params["tqy"] = m_t_qy[typ];
     params["tqz"] = m_t_qz[typ];
-    params["nang"] = m_num_angles[typ]
+    params["nang"] = m_num_angles;
     auto angL = pybind11::array_t<Scalar>(m_num_angles);
     auto angL_unchecked = angL.mutable_unchecked<1>();
 
