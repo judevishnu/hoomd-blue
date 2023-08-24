@@ -294,21 +294,19 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int tagn = m_group2->getMemberTag(i);
         unsigned int rtagp = h_rtag.data[tagp];
         unsigned int rtagn = h_rtag.data[tagn];
-        unsigned int rtagpside;
-        unsigned int rtagnside;
         unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
         printf("I am computeForces %f %f %d %f %f %f %f \n",m_K[dihedral_type], m_sign[dihedral_type], m_multi[dihedral_type], m_phi_0[dihedral_type], m_t_qx[dihedral_type], m_t_qy[dihedral_type], m_t_qz[dihedral_type]);
 
         if (rtagp == idx_b)
             {
-              rtagpside = idx_a;
-              rtagnside = idx_d;
+              unsigned int rtagpside = idx_a;
+              unsigned int rtagnside = idx_d;
               rtagn = idx_c;
             }
         else if (rtagp == idx_c)
             {
-              rtagpside = idx_d;
-              rtagnside = idx_a;
+              unsigned int rtagpside = idx_d;
+              unsigned int rtagnside = idx_a;
               rtagn = idx_b;
 
             }
@@ -359,6 +357,9 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         torqp.x = 0.0;
         torqp.y = 0.0;
         torqp.z = 0.0;
+        torqn.x = 0.0;
+        torqn.y = 0.0;
+        torqn.z = 0.0;
 
         tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
         tmpangl = anglDiff(tmpangl);
