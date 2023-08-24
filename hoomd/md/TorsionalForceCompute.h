@@ -94,6 +94,20 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
         return m_group2;
         }
 
+    //Retund angle in the range 0 to Pi
+    Scalar anglDiff(Scalar diff)
+        {
+          if (diff > M_PI)
+              {
+              diff -= 2 * M_PI;
+              }
+          else if (diff <= -M_PI)
+              {
+              diff += 2 * M_PI;
+              }
+          return diff
+        }
+
 #ifdef ENABLE_MPI
     //! Get ghost particle fields requested by this pair potential
     /*! \param timestep Current time step
@@ -116,7 +130,11 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
     Scalar* m_t_qx; //!< phi_0 parameter for multiple dihedral types
     Scalar* m_t_qy; //!< phi_0 parameter for multiple dihedral types
     Scalar* m_t_qz; //!< phi_0 parameter for multiple dihedral types
-    //Scalar* m_array_angles;
+    GPUArray<Scalar> m_angles;
+    GPUArray<Scalar2> m_oldnew_angles; //!< x component old and y component new angles
+    Index2D m_oldnew_value;            //!< Index table helper
+
+    unsigned int m_num_angles;
 
     std::shared_ptr<DihedralData> m_dihedral_data; //!< Dihedral data to use in computing dihedrals
     std::shared_ptr<ParticleGroup> m_group1; //!< Group of particles on which this force is applied
