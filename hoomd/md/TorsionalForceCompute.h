@@ -36,13 +36,14 @@ struct torsional_sin_params
     Scalar t_qx;
     Scalar t_qy;
     Scalar t_qz;
+    int num_angles;
 
 #ifndef __HIPCC__
     torsional_sin_params() : k(0.), d(0.), n(0), phi_0(0.), t_qx(0.), t_qy(0.), t_qz(0.) { }
 
     torsional_sin_params(pybind11::dict v)
         : k(v["k"].cast<Scalar>()), d(v["d"].cast<Scalar>()), n(v["n"].cast<int>()),
-          phi_0(v["phi0"].cast<Scalar>()), t_qx(v["tqx"].cast<Scalar>()),t_qy(v["tqy"].cast<Scalar>()),t_qz(v["tqz"].cast<Scalar>())
+          phi_0(v["phi0"].cast<Scalar>()), t_qx(v["tqx"].cast<Scalar>()),t_qy(v["tqy"].cast<Scalar>()),t_qz(v["tqz"].cast<Scalar>()),num_angles(v["nang"].cast<int>())
         {
         }
 
@@ -56,6 +57,7 @@ struct torsional_sin_params
         v["tqx"] = t_qx;
         v["tqy"] = t_qy;
         v["tqz"] = t_qz;
+        v["nang"] = num_angles;
         return v;
         }
 #endif
@@ -105,7 +107,7 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
               {
               diff += 2 * M_PI;
               }
-          return diff
+          return diff;
         }
 
 #ifdef ENABLE_MPI

@@ -216,6 +216,7 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     params["tqx"] = m_t_qx[typ];
     params["tqy"] = m_t_qy[typ];
     params["tqz"] = m_t_qz[typ];
+    params["nang"] = m_num_angles[typ]
     auto angL = pybind11::array_t<Scalar>(m_num_angles);
     auto angL_unchecked = angL.mutable_unchecked<1>();
 
@@ -351,6 +352,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         Scalar angl;
         Scalar diffangl;
         Scalar tmpangl;
+        Scalar oldangl;
         Scalar3 torqp;
         Scalar3 torqn;
         Scalar3 constT;
@@ -360,15 +362,15 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
 
         tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
         tmpangl = anglDiff(tmpangl);
-        oldangl = h_oldnew_angles.data[m_oldnew_value(i, type)].x;
-        diffangl = tmpangl - olfangl;
+        oldangl = h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x;
+        diffangl = tmpangl - oldangl;
         diffangl = anglDiff(diffangl);
-        h_oldnew_angles.data[m_oldnew_value(i, type)].y = tmpangl;
+        h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].y = tmpangl;
         angl = h_angles.data[i]+diffangl;
         h_angles.data[i] = angl;
         Scalar cs = fast::cos(angl);
         Scalar ss = fast::sin(angl);
-        h_oldnew_angles.data[m_oldnew_value(i, type)].x = tmpangl;
+        h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
 
         if (angl> M_PI)
             {
