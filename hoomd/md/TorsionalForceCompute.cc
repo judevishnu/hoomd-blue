@@ -294,6 +294,8 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int tagn = m_group2->getMemberTag(i);
         unsigned int rtagp = h_rtag.data[tagp];
         unsigned int rtagn = h_rtag.data[tagn];
+        unsigned int rtagpside;
+        unsigned int rtagnside;
         unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
         printf("I am computeForces %f %f %d %f %f %f %f \n",m_K[dihedral_type], m_sign[dihedral_type], m_multi[dihedral_type], m_phi_0[dihedral_type], m_t_qx[dihedral_type], m_t_qy[dihedral_type], m_t_qz[dihedral_type]);
 
