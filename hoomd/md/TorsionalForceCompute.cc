@@ -426,7 +426,7 @@ void export_TorsionalForceCompute(pybind11::module& m)
                      ForceCompute,
                      std::shared_ptr<TorsionalForceCompute>>(m,
                                                                     "TorsionalForceCompute")
-        .def(pybind11::init<std::shared_ptr<SystemDefinition>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>>())
+        .def(pybind11::init<std::shared_ptr<SystemDefinition>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,unsigned int >())
         .def("setParams", &TorsionalForceCompute::setParamsPython)
         .def("getParams", &TorsionalForceCompute::getParams)
         .def_property_readonly("filter1",
