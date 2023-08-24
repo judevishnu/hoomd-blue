@@ -216,7 +216,7 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     params["tqx"] = m_t_qx[typ];
     params["tqy"] = m_t_qy[typ];
     params["tqz"] = m_t_qz[typ];
-    params["nang"] = m_num_angles;
+    //params["nang"] = m_num_angles;
     auto angL = pybind11::array_t<Scalar>(m_num_angles);
     auto angL_unchecked = angL.mutable_unchecked<1>();
 
@@ -225,12 +225,29 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
         angL_unchecked(i) = h_angles.data[i];
         }
 
-    params["angles"] = angL;
+    //params["angles"] = angL;
 
     //printf("I am get %f %f %d %f %f %f %f \n",params["k"], params["d"], params["n"], params["phi_0"], params["t_qx"],params["t_qy"],params["t_qz"]);
 
     return params;
     }
+
+pybind11::array_t<Scalar> TorsionalForceCompute::getangles(std::string type)
+    {
+    auto typ = m_dihedral_data->getTypeByName(type);
+    ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::read);
+    auto angL = pybind11::array_t<Scalar>(m_num_angles);
+    auto angL_unchecked = angL.mutable_unchecked<1>();
+
+    for (unsigned int i = 0; i < m_num_angles; i++)
+        {
+        angL_unchecked(i) = h_angles.data[i];
+        }
+
+    return angL;
+
+    }
+
 
 /*! Actually perform the force computation
     \param timestep Current time step
@@ -432,6 +449,7 @@ void export_TorsionalForceCompute(pybind11::module& m)
         .def(pybind11::init<std::shared_ptr<SystemDefinition>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,unsigned int >())
         .def("setParams", &TorsionalForceCompute::setParamsPython)
         .def("getParams", &TorsionalForceCompute::getParams)
+        .def("getParams", &TorsionalForceCompute::getangles)
         .def_property_readonly("nang", &TorsionalForceCompute::getnumangles)
         .def_property_readonly("filter1",
                                [](TorsionalForceCompute& force)

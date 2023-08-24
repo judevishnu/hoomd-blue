@@ -107,10 +107,14 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
               }
           return diff;
         }
+
     unsigned int getnumangles()
         {
           return m_num_angles;
         }
+
+    // Get the angles after rotation for a particular type
+    pybind11::array_t<Scalar> getangles(std::string type);
 
 #ifdef ENABLE_MPI
     //! Get ghost particle fields requested by this pair potential
