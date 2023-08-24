@@ -71,7 +71,7 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
     {
     public:
     //! Constructs the compute
-    TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2);
+    TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2,unsigned int num_angles);
 
     //! Destructor
     virtual ~TorsionalForceCompute();
@@ -106,6 +106,10 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
               diff += 2 * M_PI;
               }
           return diff;
+        }
+    unsigned int getnumangles()
+        {
+          return m_num_angles;
         }
 
 #ifdef ENABLE_MPI
