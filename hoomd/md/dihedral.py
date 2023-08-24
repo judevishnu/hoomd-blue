@@ -193,10 +193,11 @@ class Torsional(Dihedral):
 
     def __init__(self,filter1,filter2,nangles):
         super().__init__()
-        param_dict = ParameterDict(filter1=ParticleFilter,filter2=ParticleFilter,nang=int)
+        param_dict = ParameterDict(filter1=ParticleFilter,filter2=ParticleFilter,nangles=int)
         param_dict["filter1"] = filter1
         param_dict["filter2"] = filter2
         param_dict["nang"] = nangles
+        self.nangles = nangles
 
         # set defaults
         self._param_dict = param_dict
