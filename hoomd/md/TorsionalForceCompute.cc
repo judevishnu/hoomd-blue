@@ -89,7 +89,7 @@ void TorsionalForceCompute::setParams(unsigned int type,
                                              Scalar K,
                                              Scalar sign,
                                              int multiplicity,
-                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz, int nang)
+                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz)
     {
     // make sure the type is valid
     if (type >= m_dihedral_data->getNTypes())
