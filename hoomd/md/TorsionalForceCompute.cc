@@ -392,7 +392,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         Scalar ss = slow::sin(angl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
 
-        if (angl> M_PI)
+        if ((angl> M_PI)&&(angl<3*M_PI/2))
             {
             ss = slow::sin(angl- M_PI);
             cs = slow::sin(angl- M_PI);
