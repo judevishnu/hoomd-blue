@@ -388,14 +388,14 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].y = tmpangl;
         angl = h_angles.data[i]+diffangl;
         h_angles.data[i] = angl;
-        Scalar cs = fast::cos(angl);
-        Scalar ss = fast::sin(angl);
+        Scalar cs = slow::cos(angl);
+        Scalar ss = slow::sin(angl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
 
         if (angl> M_PI)
             {
-            ss = fast::sin(angl- M_PI);
-            cs = fast::sin(angl- M_PI);
+            ss = slow::sin(angl- M_PI);
+            cs = slow::sin(angl- M_PI);
             torqp.x =  0.0 ;
             torqp.y =  0.0 ;
             torqp.z =  -2*m_K[dihedral_type]*cs*ss;
