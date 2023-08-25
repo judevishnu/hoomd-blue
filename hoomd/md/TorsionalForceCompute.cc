@@ -314,7 +314,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int rtagpside;
         unsigned int rtagnside;
         unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
-        printf("I am computeForces %f %f %d %f %f %f %f \n",m_K[dihedral_type], m_sign[dihedral_type], m_multi[dihedral_type], m_phi_0[dihedral_type], m_t_qx[dihedral_type], m_t_qy[dihedral_type], m_t_qz[dihedral_type]);
+        //printf("I am computeForces %f %f %d %f %f %f %f \n",m_K[dihedral_type], m_sign[dihedral_type], m_multi[dihedral_type], m_phi_0[dihedral_type], m_t_qx[dihedral_type], m_t_qy[dihedral_type], m_t_qz[dihedral_type]);
 
         if (rtagp == idx_b)
             {
