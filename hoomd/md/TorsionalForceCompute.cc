@@ -318,15 +318,18 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
 
         if (rtagp == idx_b)
             {
-              unsigned int rtagpside = idx_a;
-              unsigned int rtagnside = idx_d;
+              rtagpside = idx_a;
+              rtagnside = idx_d;
               rtagn = idx_c;
+              printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
             }
         else if (rtagp == idx_c)
             {
-              unsigned int rtagpside = idx_d;
-              unsigned int rtagnside = idx_a;
+              rtagpside = idx_d;
+              rtagnside = idx_a;
               rtagn = idx_b;
+              printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
+
 
             }
 
@@ -387,7 +390,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         diffangl = anglDiff(diffangl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].y = tmpangl;
         angl = h_angles.data[i]+diffangl;
-        printf("%d %f \n",i,angl);
+        //printf("%d %f \n",i,angl);
         h_angles.data[i] = angl;
         Scalar cs = slow::cos(angl);
         Scalar ss = slow::sin(angl);
