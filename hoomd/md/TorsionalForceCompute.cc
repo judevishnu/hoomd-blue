@@ -449,7 +449,7 @@ void export_TorsionalForceCompute(pybind11::module& m)
         .def(pybind11::init<std::shared_ptr<SystemDefinition>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,unsigned int >())
         .def("setParams", &TorsionalForceCompute::setParamsPython)
         .def("getParams", &TorsionalForceCompute::getParams)
-        .def("getParams", &TorsionalForceCompute::getangles)
+        .def("getAngles", &TorsionalForceCompute::getangles)
         .def_property_readonly("nang", &TorsionalForceCompute::getnumangles)
         .def_property_readonly("filter1",
                                [](TorsionalForceCompute& force)
