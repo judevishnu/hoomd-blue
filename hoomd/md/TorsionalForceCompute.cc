@@ -387,6 +387,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         diffangl = anglDiff(diffangl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].y = tmpangl;
         angl = h_angles.data[i]+diffangl;
+        printf("%d %f \n",i,angl);
         h_angles.data[i] = angl;
         Scalar cs = slow::cos(angl);
         Scalar ss = slow::sin(angl);
