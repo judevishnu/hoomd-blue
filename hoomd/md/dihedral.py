@@ -208,9 +208,12 @@ class Torsional(Dihedral):
             TypeParameterDict(k=float, d=float, n=int, phi0=float, tqx=float, tqy=float, tqz=float, len_keys=1))
         self._add_typeparam(params)
 
-    @property
+    
     def get_angles(self,typ):
-        my_class = _md.TorsionalForceCompute
+        if isinstance(sim.device, hoomd.device.CPU):
+            my_class = _md.TorsionalForceCompute
+        else:
+            my_class = _md.ActiveForceComputeGPU
         angles = my_class.getAngles(typ)
         return angles
 
