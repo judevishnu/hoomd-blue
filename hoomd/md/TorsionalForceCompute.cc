@@ -142,8 +142,8 @@ void TorsionalForceCompute::setParams(unsigned int type,
         unsigned int idx_b = h_rtag.data[dihedral.tag[1]];
         unsigned int idx_c = h_rtag.data[dihedral.tag[2]];
         unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
-        unsigned int idp = m_group1->getMemberIndex(i);
-        unsigned int idn = m_group2->getMemberIndex(i);
+        // unsigned int idp = m_group1->getMemberIndex(i);
+        // unsigned int idn = m_group2->getMemberIndex(i);
         unsigned int tagp = m_group1->getMemberTag(i);
         unsigned int tagn = m_group2->getMemberTag(i);
         unsigned int tagpside = m_group3->getMemberTag(i);
@@ -311,7 +311,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         // unsigned int idn = m_group2->getMemberIndex(i);
         unsigned int tagp = m_group1->getMemberTag(i);
         unsigned int tagn = m_group2->getMemberTag(i);
-        unsigned int tagpside = m_group4->getMemberTag(i);
+        unsigned int tagpside = m_group3->getMemberTag(i);
         unsigned int tagnside = m_group4->getMemberTag(i);
         unsigned int rtagp = h_rtag.data[tagp];
         unsigned int rtagn = h_rtag.data[tagn];
