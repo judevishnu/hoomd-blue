@@ -81,6 +81,7 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
     setParams(unsigned int type, Scalar K, Scalar sign, int multiplicity, Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz);
 
     virtual void setParamsPython(std::string type, pybind11::dict params);
+    //virtual void TorsionalForceCompute::setangles();
 
     /// Get the parameters for a particular type
     pybind11::dict getParams(std::string type);
@@ -148,6 +149,8 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
     Scalar* m_t_qy; //!< phi_0 parameter for multiple dihedral types
     Scalar* m_t_qz; //!< phi_0 parameter for multiple dihedral types
     GPUArray<Scalar> m_angles;
+    GPUArray<Scalar> m_ref_angles;
+
     GPUArray<Scalar2> m_oldnew_angles; //!< x component old and y component new angles
     Index2D m_oldnew_value;            //!< Index table helper
 
