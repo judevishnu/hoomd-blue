@@ -210,13 +210,8 @@ class Torsional(Dihedral):
 
 
     def get_angles(self,typ):
-        sim = self._simulation
-
-        if isinstance(sim.device, hoomd.device.CPU):
-            my_class = _md.TorsionalForceCompute
-        else:
-            my_class = _md.ActiveForceComputeGPU
-        angles = my_class.getAngles(typ)
+        
+        angles = self._cpp_obj.getAngles(typ)
         return angles
 
     def _attach(self):
