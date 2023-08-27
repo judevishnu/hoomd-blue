@@ -198,7 +198,6 @@ class Torsional(Dihedral):
         param_dict["filter2"] = filter2
         param_dict["nang"] = nangles
         self.nangles = nangles
-        self.typestring =
 
         # set defaults
         self._param_dict = param_dict
