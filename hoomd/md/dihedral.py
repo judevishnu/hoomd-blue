@@ -191,11 +191,13 @@ class Torsional(Dihedral):
     """
     _cpp_class_name = "TorsionalForceCompute"
 
-    def __init__(self,filter1,filter2,nangles):
+    def __init__(self,filter1,filter2,filter3,filter4,nangles):
         super().__init__()
-        param_dict = ParameterDict(filter1=ParticleFilter,filter2=ParticleFilter,nangles=int)
+        param_dict = ParameterDict(filter1=ParticleFilter,filter2=ParticleFilter,filter3=ParticleFilter,filter4=ParticleFilter,nangles=int)
         param_dict["filter1"] = filter1
         param_dict["filter2"] = filter2
+        param_dict["filter3"] = filter3
+        param_dict["filter4"] = filter4
         param_dict["nang"] = nangles
         self.nangles = nangles
 
@@ -210,7 +212,7 @@ class Torsional(Dihedral):
 
 
     def get_angles(self,typ):
-        
+
         angles = self._cpp_obj.getAngles(typ)
         return angles
 
@@ -225,7 +227,7 @@ class Torsional(Dihedral):
             my_class = _md.ActiveForceComputeGPU
 
         self._cpp_obj = my_class(sim.state._cpp_sys_def,
-                                 sim.state._get_group(self.filter1),sim.state._get_group(self.filter2),self.nangles)
+                                 sim.state._get_group(self.filter1),sim.state._get_group(self.filter2),sim.state._get_group(self.filter3),sim.state._get_group(self.filter4),self.nangles)
 
         # Attach param_dict and typeparam_dict
         Force._attach(self)

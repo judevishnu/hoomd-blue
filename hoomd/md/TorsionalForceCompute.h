@@ -71,7 +71,7 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
     {
     public:
     //! Constructs the compute
-    TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2,unsigned int num_angles);
+    TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2,std::shared_ptr<ParticleGroup> group3,std::shared_ptr<ParticleGroup> group4,unsigned int num_angles);
 
     //! Destructor
     virtual ~TorsionalForceCompute();
@@ -94,6 +94,15 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
         return m_group2;
         }
 
+    std::shared_ptr<ParticleGroup>& getGroup3()
+        {
+        return m_group3;
+        }
+
+    std::shared_ptr<ParticleGroup>& getGroup4()
+        {
+        return m_group4;
+        }
     //Retund angle in the range 0 to Pi
     Scalar anglDiff(Scalar diff)
         {
@@ -147,6 +156,8 @@ class PYBIND11_EXPORT TorsionalForceCompute : public ForceCompute
     std::shared_ptr<DihedralData> m_dihedral_data; //!< Dihedral data to use in computing dihedrals
     std::shared_ptr<ParticleGroup> m_group1; //!< Group of particles on which this force is applied
     std::shared_ptr<ParticleGroup> m_group2; //!< Group of particles on which this force is applied
+    std::shared_ptr<ParticleGroup> m_group3; //!< Group of particles on which this force is applied
+    std::shared_ptr<ParticleGroup> m_group4; //!< Group of particles on which this force is applied
     //! Actually compute the forces
     virtual void computeForces(uint64_t timestep);
     };

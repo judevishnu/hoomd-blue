@@ -22,8 +22,8 @@ namespace md
 /*! \param sysdef System to compute forces on
     \post Memory is allocated, and forces are zeroed.
 */
-TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2,unsigned int num_angles)
-    : ForceCompute(sysdef), m_group1(group1), m_group2(group2),m_num_angles(num_angles), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_qx(NULL), m_t_qy(NULL), m_t_qz(NULL)
+TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2,std::shared_ptr<ParticleGroup> group3,std::shared_ptr<ParticleGroup> group4,unsigned int num_angles)
+    : ForceCompute(sysdef), m_group1(group1), m_group2(group2),m_group3(group3),m_group4(group4),m_num_angles(num_angles), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_qx(NULL), m_t_qy(NULL), m_t_qz(NULL)
     {
     m_exec_conf->msg->notice(5) << "Constructing TorsionalForceCompute" << endl;
 
@@ -146,24 +146,26 @@ void TorsionalForceCompute::setParams(unsigned int type,
         unsigned int idn = m_group2->getMemberIndex(i);
         unsigned int tagp = m_group1->getMemberTag(i);
         unsigned int tagn = m_group2->getMemberTag(i);
+        unsigned int tagpside = m_group3->getMemberTag(i);
+        unsigned int tagnside = m_group4->getMemberTag(i);
         unsigned int rtagp = h_rtag.data[tagp];
         unsigned int rtagn = h_rtag.data[tagn];
-        unsigned int rtagpside;
-        unsigned int rtagnside;
+        unsigned int rtagpside = h_rtag.data[tagpside];
+        unsigned int rtagnside = h_rtag.data[tagnside];
         unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
-        if (rtagp == idx_b)
-            {
-              rtagpside = idx_a;
-              rtagnside = idx_d;
-              rtagn = idx_c;
-            }
-        else if (rtagp == idx_c)
-            {
-              rtagpside = idx_d;
-              rtagnside = idx_a;
-              rtagn = idx_b;
-
-            }
+        // if (rtagp == idx_b)
+        //     {
+        //       rtagpside = idx_a;
+        //       rtagnside = idx_d;
+        //       rtagn = idx_c;
+        //     }
+        // else if (rtagp == idx_c)
+        //     {
+        //       rtagpside = idx_d;
+        //       rtagnside = idx_a;
+        //       rtagn = idx_b;
+        //
+        //     }
         assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
         assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
         assert(idx_c < m_pdata->getN() + m_pdata->getNGhosts());
@@ -199,7 +201,7 @@ void TorsionalForceCompute::setParamsPython(std::string type, pybind11::dict par
     // make sure the type is valid
     auto typ = m_dihedral_data->getTypeByName(type);
     torsional_sin_params _params(params);
-    printf("Iam set %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
+    //printf("Iam set %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
     setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_qx, _params.t_qy, _params.t_qz);
     }
 
@@ -305,33 +307,35 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         unsigned int idx_b = h_rtag.data[dihedral.tag[1]];
         unsigned int idx_c = h_rtag.data[dihedral.tag[2]];
         unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
-        unsigned int idp = m_group1->getMemberIndex(i);
-        unsigned int idn = m_group2->getMemberIndex(i);
+        // unsigned int idp = m_group1->getMemberIndex(i);
+        // unsigned int idn = m_group2->getMemberIndex(i);
         unsigned int tagp = m_group1->getMemberTag(i);
         unsigned int tagn = m_group2->getMemberTag(i);
+        unsigned int tagpside = m_group4->getMemberTag(i);
+        unsigned int tagnside = m_group4->getMemberTag(i);
         unsigned int rtagp = h_rtag.data[tagp];
         unsigned int rtagn = h_rtag.data[tagn];
-        unsigned int rtagpside;
-        unsigned int rtagnside;
+        unsigned int rtagpside = h_rtag.data[tagpside];
+        unsigned int rtagnside = h_rtag.data[tagnside];
         unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
         //printf("I am computeForces %f %f %d %f %f %f %f \n",m_K[dihedral_type], m_sign[dihedral_type], m_multi[dihedral_type], m_phi_0[dihedral_type], m_t_qx[dihedral_type], m_t_qy[dihedral_type], m_t_qz[dihedral_type]);
 
-        if (rtagp == idx_b)
-            {
-              rtagpside = idx_a;
-              rtagnside = idx_d;
-              rtagn = idx_c;
-              //printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
-            }
-        else if (rtagp == idx_c)
-            {
-              rtagpside = idx_d;
-              rtagnside = idx_a;
-              rtagn = idx_b;
-              //printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
-
-
-            }
+        // if (rtagp == idx_b)
+        //     {
+        //       rtagpside = idx_a;
+        //       rtagnside = idx_d;
+        //       rtagn = idx_c;
+        //       //printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
+        //     }
+        // else if (rtagp == idx_c)
+        //     {
+        //       rtagpside = idx_d;
+        //       rtagnside = idx_a;
+        //       rtagn = idx_b;
+        //       //printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
+        //
+        //
+        //     }
 
 
         // printf("dihedral particle ids %u %u %u %u %u %u %u %u \n",dihedral.tag[0],dihedral.tag[1],dihedral.tag[2],dihedral.tag[3],h_rtag.data[dihedral.tag[0]],h_rtag.data[dihedral.tag[1]],h_rtag.data[dihedral.tag[2]],h_rtag.data[dihedral.tag[3]]);
@@ -419,7 +423,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
             }
         else if (angl == 0)
             {
-            if (timestep < 1000)
+            if (timestep < 10)
                 {
                   torqp.x =  m_t_qx[dihedral_type];
                   torqp.y =  m_t_qy[dihedral_type];
@@ -450,7 +454,7 @@ void export_TorsionalForceCompute(pybind11::module& m)
                      ForceCompute,
                      std::shared_ptr<TorsionalForceCompute>>(m,
                                                                     "TorsionalForceCompute")
-        .def(pybind11::init<std::shared_ptr<SystemDefinition>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,unsigned int >())
+        .def(pybind11::init<std::shared_ptr<SystemDefinition>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,unsigned int >())
         .def("setParams", &TorsionalForceCompute::setParamsPython)
         .def("getParams", &TorsionalForceCompute::getParams)
         .def("getAngles", &TorsionalForceCompute::getangles)
@@ -460,7 +464,13 @@ void export_TorsionalForceCompute(pybind11::module& m)
                                { return force.getGroup1()->getFilter(); })
         .def_property_readonly("filter2",
                                [](TorsionalForceCompute& force)
-                               { return force.getGroup2()->getFilter(); });
+                               { return force.getGroup2()->getFilter(); })
+        .def_property_readonly("filter3",
+                               [](TorsionalForceCompute& force)
+                              { return force.getGroup3()->getFilter(); })
+        .def_property_readonly("filter4",
+                               [](TorsionalForceCompute& force)
+                              { return force.getGroup4()->getFilter(); });
     }
 
     } // end namespace detail
