@@ -321,14 +321,14 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
               rtagpside = idx_a;
               rtagnside = idx_d;
               rtagn = idx_c;
-              printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
+              //printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
             }
         else if (rtagp == idx_c)
             {
               rtagpside = idx_d;
               rtagnside = idx_a;
               rtagn = idx_b;
-              printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
+              //printf("%d %d %d %d %d \n",i,rtagp,rtagn,rtagpside,rtagnside);
 
 
             }
