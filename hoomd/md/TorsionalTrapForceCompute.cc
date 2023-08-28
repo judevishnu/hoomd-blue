@@ -448,13 +448,13 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         ddc = box.minImage(ddc);
         Scalar3 refvecp;
         Scalar3 refvecn;
-        refvecp.x = h_ref_vecp.data[m_ref_vecp_value(i, type)].x;
-        refvecp.y = h_ref_vecp.data[m_ref_vecp_value(i, type)].y;
-        refvecp.z = h_ref_vecp.data[m_ref_vecp_value(i, type)].z;
+        refvecp.x = h_ref_vecp.data[m_ref_vecp_value(i, dihedral_type)].x;
+        refvecp.y = h_ref_vecp.data[m_ref_vecp_value(i, dihedral_type)].y;
+        refvecp.z = h_ref_vecp.data[m_ref_vecp_value(i, dihedral_type)].z;
 
-        refvecn.x = h_ref_vecn.data[m_ref_vecn_value(i, type)].x;
-        refvecn.y = h_ref_vecn.data[m_ref_vecn_value(i, type)].y;
-        refvecn.z = h_ref_vecn.data[m_ref_vecn_value(i, type)].z;
+        refvecn.x = h_ref_vecn.data[m_ref_vecn_value(i, dihedral_type)].x;
+        refvecn.y = h_ref_vecn.data[m_ref_vecn_value(i, dihedral_type)].y;
+        refvecn.z = h_ref_vecn.data[m_ref_vecn_value(i, dihedral_type)].z;
         //####################################################################################################
         // Scalar rsqp = dab.x*dab.x + dab.y*dab.y + dab.z*dab.z;
         // Scalar rsqrtp = sqrt(rsqp);
@@ -496,8 +496,8 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         Scalar csn;
         Scalar ssn;
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
-        tmpanglp = atan2(dab.y, dab.x) - atan2(refvecp.y,refvecp.x);
-        tmpangln = atan2(ddc.y, ddc.x) - atan2(refvecn.y,refvecn.x);
+        Scalar tmpanglp = atan2(dab.y, dab.x) - atan2(refvecp.y,refvecp.x);
+        Scalar tmpangln = atan2(ddc.y, ddc.x) - atan2(refvecn.y,refvecn.x);
 
         // if ((angl> ref_angl)||(angl<ref_angl))
         //     {
