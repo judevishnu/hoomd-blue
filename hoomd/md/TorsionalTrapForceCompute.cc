@@ -63,9 +63,9 @@ TorsionalTrapForceCompute::TorsionalTrapForceCompute(std::shared_ptr<SystemDefin
     assert(!m_oldnew_angles.isNull());
     Index2D oldnew_value((unsigned int)m_oldnew_angles.getPitch(),
                         (unsigned int)m_dihedral_data->getNTypes());
-    Index3D ref_vecp_value((unsigned int)m_ref_vecp.getPitch(),
+    Index2D ref_vecp_value((unsigned int)m_ref_vecp.getPitch(),
                                             (unsigned int)m_dihedral_data->getNTypes());
-    Index3D ref_vecn_value((unsigned int)m_ref_vecn.getPitch(),
+    Index2D ref_vecn_value((unsigned int)m_ref_vecn.getPitch(),
                                             (unsigned int)m_dihedral_data->getNTypes());
     m_oldnew_value = oldnew_value;
     m_ref_vecp_value = ref_vecp_value;
