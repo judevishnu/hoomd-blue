@@ -1,7 +1,7 @@
 
 
 set(_md_sources module-md.cc
-                   TorsionalForceCompute1.cc
+                   TorsionalTrapForceCompute.cc
                    TorsionalForceCompute.cc
                    ActiveForceCompute.cc
                    ActiveRotationalDiffusionUpdater.cc
@@ -55,7 +55,7 @@ set(_md_sources module-md.cc
                    ZeroMomentumUpdater.cc
                    )
 
-set(_md_headers TorsionalForceCompute1.h
+set(_md_headers TorsionalTrapForceCompute.h
                 TorsionalForceCompute.h
                 ActiveForceComputeGPU.h
                 ActiveForceCompute.h

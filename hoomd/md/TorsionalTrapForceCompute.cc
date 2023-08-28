@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2023 The Regents of the University of Michigan.
 // Part of HOOMD-blue, released under the BSD 3-Clause License.
 
-#include "TorsionalForceCompute.h"
+#include "TorsionalTrapForceCompute.h"
 
 #include <iostream>
 #include <math.h>
@@ -11,7 +11,7 @@
 
 using namespace std;
 
-/*! \file TorsionalForceCompute.cc
+/*! \file TorsionaltrapForceCompute.cc
     \brief Contains code for the HarmonicDihedralForceCompute class
 */
 
@@ -22,10 +22,10 @@ namespace md
 /*! \param sysdef System to compute forces on
     \post Memory is allocated, and forces are zeroed.
 */
-TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2,std::shared_ptr<ParticleGroup> group3,std::shared_ptr<ParticleGroup> group4,unsigned int num_angles)
-    : ForceCompute(sysdef), m_group1(group1), m_group2(group2),m_group3(group3),m_group4(group4),m_num_angles(num_angles), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_qx(NULL), m_t_qy(NULL), m_t_qz(NULL)
+TorsionalTrapForceCompute::TorsionalTrapForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2,std::shared_ptr<ParticleGroup> group3,std::shared_ptr<ParticleGroup> group4,unsigned int num_angles)
+    : ForceCompute(sysdef), m_group1(group1), m_group2(group2),m_group3(group3),m_group4(group4),m_num_angles(num_angles), m_K(NULL)
     {
-    m_exec_conf->msg->notice(5) << "Constructing TorsionalForceCompute" << endl;
+    m_exec_conf->msg->notice(5) << "Constructing TorsionalTrapForceCompute" << endl;
 
     // access the dihedral data for later use
     m_dihedral_data = m_sysdef->getDihedralData();
@@ -38,12 +38,7 @@ TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> s
 
     // allocate the parameters
     m_K = new Scalar[m_dihedral_data->getNTypes()];
-    m_sign = new Scalar[m_dihedral_data->getNTypes()];
-    m_multi = new int[m_dihedral_data->getNTypes()];
-    m_phi_0 = new Scalar[m_dihedral_data->getNTypes()];
-    m_t_qx = new Scalar[m_dihedral_data->getNTypes()];
-    m_t_qy = new Scalar[m_dihedral_data->getNTypes()];
-    m_t_qz = new Scalar[m_dihedral_data->getNTypes()];
+
     // allocate storage for the angles, newangles and old angles
     GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_angles.swap(angles);
@@ -63,24 +58,14 @@ TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> s
 
     }
 
-TorsionalForceCompute::~TorsionalForceCompute()
+TorsionalTrapForceCompute::~TorsionalTrapForceCompute()
     {
-    m_exec_conf->msg->notice(5) << "Destroying TorsionalForceCompute" << endl;
+    m_exec_conf->msg->notice(5) << "Destroying TorsionalTrapForceCompute" << endl;
 
     delete[] m_K;
-    delete[] m_sign;
-    delete[] m_multi;
-    delete[] m_phi_0;
-    delete[] m_t_qx;
-    delete[] m_t_qy;
-    delete[] m_t_qz;
+
     m_K = NULL;
-    m_sign = NULL;
-    m_multi = NULL;
-    m_phi_0 = NULL;
-    m_t_qx = NULL;//make_scalar3(0.,0.,0.);
-    m_t_qy = NULL;
-    m_t_qz = NULL;
+
     }
 
 /*! \param type Type of the dihedral to set parameters for
@@ -171,11 +156,7 @@ TorsionalForceCompute::~TorsionalForceCompute()
 //     }
 
 
-void TorsionalForceCompute::setParams(unsigned int type,
-                                             Scalar K,
-                                             Scalar sign,
-                                             int multiplicity,
-                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz)
+void TorsionalTrapForceCompute::setParams(unsigned int type,Scalar K)
     {
     // make sure the type is valid
     if (type >= m_dihedral_data->getNTypes())
@@ -184,22 +165,12 @@ void TorsionalForceCompute::setParams(unsigned int type,
         }
 
     m_K[type] = K;
-    m_sign[type] = sign;
-    m_multi[type] = multiplicity;
-    m_phi_0[type] = phi_0;
-    m_t_qx[type] = t_qx;
-    m_t_qy[type] = t_qy;
-    m_t_qz[type] = t_qz;
+
 
     // check for some silly errors a user could make
     if (K <= 0)
         m_exec_conf->msg->warning() << "torsional.sin: specified K <= 0" << endl;
-    if (sign != 1 && sign != -1)
-        m_exec_conf->msg->warning()
-            << "torsional.sin: a non unitary sign was specified" << endl;
-    if (phi_0 < 0 || phi_0 >= 2 * M_PI)
-        m_exec_conf->msg->warning()
-            << "torsional.sin: specified phi_0 outside [0, 2pi)" << endl;
+
 
     ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
     ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
@@ -241,19 +212,7 @@ void TorsionalForceCompute::setParams(unsigned int type,
         unsigned int rtagpside = h_rtag.data[tagpside];
         unsigned int rtagnside = h_rtag.data[tagnside];
         unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
-        // if (rtagp == idx_b)
-        //     {
-        //       rtagpside = idx_a;
-        //       rtagnside = idx_d;
-        //       rtagn = idx_c;
-        //     }
-        // else if (rtagp == idx_c)
-        //     {
-        //       rtagpside = idx_d;
-        //       rtagnside = idx_a;
-        //       rtagn = idx_b;
-        //
-        //     }
+
         assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
         assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
         assert(idx_c < m_pdata->getN() + m_pdata->getNGhosts());
@@ -285,28 +244,23 @@ void TorsionalForceCompute::setParams(unsigned int type,
 
     }
 
-void TorsionalForceCompute::setParamsPython(std::string type, pybind11::dict params)
+void TorsionalTrapForceCompute::setParamsPython(std::string type, pybind11::dict params)
     {
     // make sure the type is valid
     auto typ = m_dihedral_data->getTypeByName(type);
-    torsional_sin_params _params(params);
+    torsionaltrap_sin_params _params(params);
     //printf("Iam set %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
     setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_qx, _params.t_qy, _params.t_qz);
     }
 
-pybind11::dict TorsionalForceCompute::getParams(std::string type)
+pybind11::dict TorsionalTrapForceCompute::getParams(std::string type)
     {
     auto typ = m_dihedral_data->getTypeByName(type);
     ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::read);
 
     pybind11::dict params;
     params["k"] = m_K[typ];
-    params["d"] = m_sign[typ];
-    params["n"] = m_multi[typ];
-    params["phi0"] = m_phi_0[typ];
-    params["tqx"] = m_t_qx[typ];
-    params["tqy"] = m_t_qy[typ];
-    params["tqz"] = m_t_qz[typ];
+
     //params["nang"] = m_num_angles;
     auto angL = pybind11::array_t<Scalar>(m_num_angles);
     auto angL_unchecked = angL.mutable_unchecked<1>();
@@ -323,7 +277,7 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
     return params;
     }
 
-pybind11::array_t<Scalar> TorsionalForceCompute::getangles(std::string type)
+pybind11::array_t<Scalar> TorsionalTrapForceCompute::getangles(std::string type)
     {
     auto typ = m_dihedral_data->getTypeByName(type);
     ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::read);
@@ -343,7 +297,7 @@ pybind11::array_t<Scalar> TorsionalForceCompute::getangles(std::string type)
 /*! Actually perform the force computation
     \param timestep Current time step
  */
-void TorsionalForceCompute::computeForces(uint64_t timestep)
+void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
     {
     assert(m_pdata);
 
@@ -437,7 +391,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         if (idx_a == NOT_LOCAL || idx_b == NOT_LOCAL || idx_c == NOT_LOCAL || idx_d == NOT_LOCAL)
             {
             this->m_exec_conf->msg->error()
-                << "torsional.sin: dihedral " << dihedral.tag[0] << " " << dihedral.tag[1]
+                << "torsionaltrap.sin: dihedral " << dihedral.tag[0] << " " << dihedral.tag[1]
                 << " " << dihedral.tag[2] << " " << dihedral.tag[3] << " incomplete." << endl
                 << endl;
             throw std::runtime_error("Error in torsional calculation");
@@ -486,45 +440,24 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         diffangl = anglDiff(diffangl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].y = tmpangl;
         angl = h_angles.data[i]+diffangl;
+        ref_angl = h_ref_angles.data[i];
         //printf("%d %f \n",i,angl);
         h_angles.data[i] = angl;
         Scalar cs = slow::cos(angl);
         Scalar ss = slow::sin(angl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
 
-        if ((angl> M_PI)&&(angl<3*M_PI/2))
-            {
-            ss = slow::sin(angl- M_PI);
-            cs = slow::cos(angl- M_PI);
-            torqp.x =  0.0 ;
-            torqp.y =  0.0 ;
-            torqp.z =  -2*m_K[dihedral_type]*cs*ss;
-            torqn.x =  0.0 ;
-            torqn.y =  0.0 ;
-            torqn.z =  2*m_K[dihedral_type]*cs*ss;
-            }
-        else if (angl < 0)
-            {
-            torqp.x =  0.0 ;
-            torqp.y =  0.0 ;
-            torqp.z =  -2*m_K[dihedral_type]*cs*ss;
-            torqn.x =  0.0 ;
-            torqn.y =  0.0 ;
-            torqn.z =  2*m_K[dihedral_type]*cs*ss;
-
-            }
-        else if (angl == 0)
-            {
-            if (timestep < 10)
-                {
-                torqp.x =  m_t_qx[dihedral_type];
-                torqp.y =  m_t_qy[dihedral_type];
-                torqp.z =  m_t_qz[dihedral_type];
-                torqn.x =  m_t_qx[dihedral_type];
-                torqn.y =  m_t_qy[dihedral_type];
-                torqn.z = -m_t_qz[dihedral_type];
-                }
-            }
+        // if ((angl> ref_angl)||(angl<ref_angl))
+        //     {
+        ss = slow::sin(angl- ref_angl);
+        cs = slow::cos(angl- ref_angl);
+        torqp.x =  0.0 ;
+        torqp.y =  0.0 ;
+        torqp.z =  -2*m_K[dihedral_type]*cs*ss;
+        torqn.x =  0.0 ;
+        torqn.y =  0.0 ;
+        torqn.z =  -2*m_K[dihedral_type]*cs*ss;
+        //}
 
 
         h_torque.data[rtagp].x += torqp.x;
@@ -542,28 +475,28 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
 
 namespace detail
     {
-void export_TorsionalForceCompute(pybind11::module& m)
+void export_TorsionalTrapForceCompute(pybind11::module& m)
     {
-    pybind11::class_<TorsionalForceCompute,
+    pybind11::class_<TorsionalTrapForceCompute,
                      ForceCompute,
-                     std::shared_ptr<TorsionalForceCompute>>(m,
-                                                                    "TorsionalForceCompute")
+                     std::shared_ptr<TorsionalTrapForceCompute>>(m,
+                                                                    "TorsionalTrapForceCompute")
         .def(pybind11::init<std::shared_ptr<SystemDefinition>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,std::shared_ptr<ParticleGroup>,unsigned int >())
-        .def("setParams", &TorsionalForceCompute::setParamsPython)
-        .def("getParams", &TorsionalForceCompute::getParams)
-        .def("getAngles", &TorsionalForceCompute::getangles)
-        .def_property_readonly("nang", &TorsionalForceCompute::getnumangles)
+        .def("setParams", &TorsionalTrapForceCompute::setParamsPython)
+        .def("getParams", &TorsionalTrapForceCompute::getParams)
+        .def("getAngles", &TorsionalTrapForceCompute::getangles)
+        .def_property_readonly("nang", &TorsionalTrapForceCompute::getnumangles)
         .def_property_readonly("filter1",
-                               [](TorsionalForceCompute& force)
+                               [](TorsionalTrapForceCompute& force)
                                { return force.getGroup1()->getFilter(); })
         .def_property_readonly("filter2",
-                               [](TorsionalForceCompute& force)
+                               [](TorsionalTrapForceCompute& force)
                                { return force.getGroup2()->getFilter(); })
         .def_property_readonly("filter3",
-                               [](TorsionalForceCompute& force)
+                               [](TorsionalTrapForceCompute& force)
                               { return force.getGroup3()->getFilter(); })
         .def_property_readonly("filter4",
-                               [](TorsionalForceCompute& force)
+                               [](TorsionalTrapForceCompute& force)
                               { return force.getGroup4()->getFilter(); });
     }
 

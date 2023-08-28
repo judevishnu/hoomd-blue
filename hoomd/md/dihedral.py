@@ -121,7 +121,7 @@ class Harmonic(Dihedral):
             TypeParameterDict(k=float, d=float, n=int, phi0=float, len_keys=1))
         self._add_typeparam(params)
 
-class Torsional1(Dihedral):
+class TorsionalTrap(Dihedral):
     r"""Harmonic dihedral force.
 
     `Harmonic` computes forces, virials, and energies on all dihedrals in the
@@ -150,14 +150,48 @@ class Torsional1(Dihedral):
         harmonic.params['A-A-A-A'] = dict(k=3.0, d=-1, n=3, phi0=0)
         harmonic.params['A-B-C-D'] = dict(k=100.0, d=1, n=4, phi0=math.pi/2)
     """
-    _cpp_class_name = "TorsionalForceCompute1"
+    _cpp_class_name = "TorsionalTrapForceCompute"
 
-    def __init__(self):
+    def __init__(self,filter1,filter2,filter3,filter4,nangles):
         super().__init__()
+        param_dict = ParameterDict(filter1=ParticleFilter,filter2=ParticleFilter,filter3=ParticleFilter,filter4=ParticleFilter,nangles=int)
+        param_dict["filter1"] = filter1
+        param_dict["filter2"] = filter2
+        param_dict["filter3"] = filter3
+        param_dict["filter4"] = filter4
+        param_dict["nang"] = nangles
+        self.nangles = nangles
+
+        # set defaults
+        self._param_dict = param_dict
+
+
         params = TypeParameter(
             'params', 'dihedral_types',
-            TypeParameterDict(k=float, d=float, n=int, phi0=float,tqx=float,tqy=float,tqz=float, filter1=ParticleFilter, filter2=ParticleFilter, len_keys=1))
+            TypeParameterDict(k=float, len_keys=1))
         self._add_typeparam(params)
+
+
+    def get_angles(self,typ):
+
+        angles = self._cpp_obj.getAngles(typ)
+        return angles
+
+    def _attach(self):
+
+        # initialize the reflected c++ class
+        sim = self._simulation
+
+        if isinstance(sim.device, hoomd.device.CPU):
+            my_class = _md.TorsionalTrapForceCompute
+        else:
+            my_class = _md.ActiveForceComputeGPU
+
+        self._cpp_obj = my_class(sim.state._cpp_sys_def,
+                                 sim.state._get_group(self.filter1),sim.state._get_group(self.filter2),sim.state._get_group(self.filter3),sim.state._get_group(self.filter4),self.nangles)
+
+        # Attach param_dict and typeparam_dict
+        Force._attach(self)
 
 
 class Torsional(Dihedral):
