@@ -139,8 +139,8 @@ class PYBIND11_EXPORT TorsionalTrapForceCompute : public ForceCompute
     GPUArray<Scalar3> m_ref_vecp;
     GPUArray<Scalar3> m_ref_vecn;
 
-    Index3D m_ref_vecp_value;
-    Index3D m_ref_vecn_value;
+    Index2D m_ref_vecp_value;
+    Index2D m_ref_vecn_value;
 
     unsigned int m_num_angles;
 
