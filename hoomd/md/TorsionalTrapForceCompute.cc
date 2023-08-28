@@ -46,15 +46,30 @@ TorsionalTrapForceCompute::TorsionalTrapForceCompute(std::shared_ptr<SystemDefin
     GPUArray<Scalar> ref_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_ref_angles.swap(ref_angles);
 
+    GPUArray<Scalar3> ref_vecp(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    m_ref_vecp.swap(ref_vecp);
+    GPUArray<Scalar3> ref_vecn(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    m_ref_vecn.swap(ref_vecn);
+
+
     GPUArray<Scalar2> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_oldnew_angles.swap(oldnew_angles);
 
     assert(!m_angles.isNull());
     assert(!m_ref_angles.isNull());
+    assert(!m_ref_vecp.isNull());
+    assert(!m_ref_vecn.isNull());
+
     assert(!m_oldnew_angles.isNull());
     Index2D oldnew_value((unsigned int)m_oldnew_angles.getPitch(),
                         (unsigned int)m_dihedral_data->getNTypes());
+    Index3D ref_vecp_value((unsigned int)m_ref_vecp.getPitch(),
+                                            (unsigned int)m_dihedral_data->getNTypes());
+    Index3D ref_vecn_value((unsigned int)m_ref_vecn.getPitch(),
+                                            (unsigned int)m_dihedral_data->getNTypes());
     m_oldnew_value = oldnew_value;
+    m_ref_vecp_value = ref_vecp_value;
+    m_ref_vecn_value = ref_vecn_value;
 
     }
 
@@ -176,6 +191,9 @@ void TorsionalTrapForceCompute::setParams(unsigned int type,Scalar K)
     ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
 
     ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar3> h_ref_vecp(m_ref_vecp, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar3> h_ref_vecp(m_ref_vecp, access_location::host, access_mode::readwrite);
+
 
     ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
     ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
@@ -239,6 +257,13 @@ void TorsionalTrapForceCompute::setParams(unsigned int type,Scalar K)
         h_oldnew_angles.data[m_oldnew_value(i, type)].y = angl;
         h_ref_angles.data[i] = angl;
         h_angles.data[i] = 0;
+        h_ref_vecp.data[m_ref_vecp_value(i, type)].x = dab.x;
+        h_ref_vecp.data[m_ref_vecp_value(i, type)].y = dab.y;
+        h_ref_vecp.data[m_ref_vecp_value(i, type)].z = dab.z;
+
+        h_ref_vecn.data[m_ref_vecn_value(i, type)].x = ddc.x;
+        h_ref_vecn.data[m_ref_vecn_value(i, type)].y = ddc.y;
+        h_ref_vecn.data[m_ref_vecn_value(i, type)].z = ddc.z;
 
         }
 
@@ -307,6 +332,10 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
     //access angles , old and new angles in readwrite mode
     ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
     ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
+
+    ArrayHandle<Scala3> h_ref_vecp(m_ref_vecp, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scala3> h_ref_vecn(m_ref_vecn, access_location::host, access_mode::readwrite);
+
 
     ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
     //Change force to Torque
@@ -418,6 +447,10 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         // dcb = box.minImage(dcb);
         ddc = box.minImage(ddc);
         //####################################################################################################
+        Scalar3 crossp;
+        Scalar3 crossn;
+        Scalar dotp;
+        Scalar dotn;
         Scalar angl;
         Scalar diffangl;
         Scalar ref_angl;
@@ -433,6 +466,7 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         torqn.y = 0.0;
         torqn.z = 0.0;
 
+        //dotn = dab.x*ddc.x;
         tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
         tmpangl = anglDiff(tmpangl);
         oldangl = h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x;
@@ -443,14 +477,14 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         ref_angl = h_ref_angles.data[i];
         //printf("%d %f \n",i,angl);
         h_angles.data[i] = angl;
-        Scalar cs = slow::cos(angl);
-        Scalar ss = slow::sin(angl);
+        Scalar cs;
+        Scalar ss;
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
 
         // if ((angl> ref_angl)||(angl<ref_angl))
         //     {
-        ss = slow::sin(angl- ref_angl);
-        cs = slow::cos(angl- ref_angl);
+        ss = slow::sin(tmpangl- ref_angl);
+        cs = slow::cos(tmpangl- ref_angl);
         torqp.x =  0.0 ;
         torqp.y =  0.0 ;
         torqp.z =  -2*m_K[dihedral_type]*cs*ss;

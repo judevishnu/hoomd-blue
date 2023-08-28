@@ -136,6 +136,12 @@ class PYBIND11_EXPORT TorsionalTrapForceCompute : public ForceCompute
     GPUArray<Scalar2> m_oldnew_angles; //!< x component old and y component new angles
     Index2D m_oldnew_value;            //!< Index table helper
 
+    GPUArray<Scalar3> m_ref_vecp;
+    GPUArray<Scalar3> m_ref_vecn;
+
+    Index3D m_ref_vecp_valu;
+    Index3D m_ref_vecn_value;
+
     unsigned int m_num_angles;
 
     std::shared_ptr<DihedralData> m_dihedral_data; //!< Dihedral data to use in computing dihedrals
