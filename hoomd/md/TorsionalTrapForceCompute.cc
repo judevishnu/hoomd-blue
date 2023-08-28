@@ -333,8 +333,8 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
     ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
     ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
 
-    ArrayHandle<Scala3> h_ref_vecp(m_ref_vecp, access_location::host, access_mode::readwrite);
-    ArrayHandle<Scala3> h_ref_vecn(m_ref_vecn, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar3> h_ref_vecp(m_ref_vecp, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar3> h_ref_vecn(m_ref_vecn, access_location::host, access_mode::readwrite);
 
 
     ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
