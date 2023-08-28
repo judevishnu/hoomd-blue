@@ -241,7 +241,7 @@ class Torsional(Dihedral):
 
         params = TypeParameter(
             'params', 'dihedral_types',
-            TypeParameterDict(k=float, d=float, n=int, phi0=float, tqx=float, tqy=float, tqz=float, len_keys=1))
+            TypeParameterDict(k=float,tqx=float, tqy=float, tqz=float, len_keys=1))
         self._add_typeparam(params)
 
 
