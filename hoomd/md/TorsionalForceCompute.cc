@@ -23,7 +23,7 @@ namespace md
     \post Memory is allocated, and forces are zeroed.
 */
 TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> sysdef,std::shared_ptr<ParticleGroup> group1,std::shared_ptr<ParticleGroup> group2,std::shared_ptr<ParticleGroup> group3,std::shared_ptr<ParticleGroup> group4,unsigned int num_angles)
-    : ForceCompute(sysdef), m_group1(group1), m_group2(group2),m_group3(group3),m_group4(group4),m_num_angles(num_angles), m_K(NULL), m_sign(NULL), m_multi(NULL), m_phi_0(NULL), m_t_qx(NULL), m_t_qy(NULL), m_t_qz(NULL)
+    : ForceCompute(sysdef), m_group1(group1), m_group2(group2),m_group3(group3),m_group4(group4),m_num_angles(num_angles), m_K(NULL), m_t_qx(NULL), m_t_qy(NULL), m_t_qz(NULL)
     {
     m_exec_conf->msg->notice(5) << "Constructing TorsionalForceCompute" << endl;
 
@@ -38,9 +38,6 @@ TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> s
 
     // allocate the parameters
     m_K = new Scalar[m_dihedral_data->getNTypes()];
-    m_sign = new Scalar[m_dihedral_data->getNTypes()];
-    m_multi = new int[m_dihedral_data->getNTypes()];
-    m_phi_0 = new Scalar[m_dihedral_data->getNTypes()];
     m_t_qx = new Scalar[m_dihedral_data->getNTypes()];
     m_t_qy = new Scalar[m_dihedral_data->getNTypes()];
     m_t_qz = new Scalar[m_dihedral_data->getNTypes()];
@@ -68,16 +65,10 @@ TorsionalForceCompute::~TorsionalForceCompute()
     m_exec_conf->msg->notice(5) << "Destroying TorsionalForceCompute" << endl;
 
     delete[] m_K;
-    delete[] m_sign;
-    delete[] m_multi;
-    delete[] m_phi_0;
     delete[] m_t_qx;
     delete[] m_t_qy;
     delete[] m_t_qz;
     m_K = NULL;
-    m_sign = NULL;
-    m_multi = NULL;
-    m_phi_0 = NULL;
     m_t_qx = NULL;//make_scalar3(0.,0.,0.);
     m_t_qy = NULL;
     m_t_qz = NULL;
@@ -171,11 +162,7 @@ TorsionalForceCompute::~TorsionalForceCompute()
 //     }
 
 
-void TorsionalForceCompute::setParams(unsigned int type,
-                                             Scalar K,
-                                             Scalar sign,
-                                             int multiplicity,
-                                             Scalar phi_0, Scalar t_qx, Scalar t_qy, Scalar t_qz)
+void TorsionalForceCompute::setParams(unsigned int type,Scalar K, Scalar t_qx, Scalar t_qy, Scalar t_qz)
     {
     // make sure the type is valid
     if (type >= m_dihedral_data->getNTypes())
@@ -184,9 +171,6 @@ void TorsionalForceCompute::setParams(unsigned int type,
         }
 
     m_K[type] = K;
-    m_sign[type] = sign;
-    m_multi[type] = multiplicity;
-    m_phi_0[type] = phi_0;
     m_t_qx[type] = t_qx;
     m_t_qy[type] = t_qy;
     m_t_qz[type] = t_qz;
@@ -194,12 +178,7 @@ void TorsionalForceCompute::setParams(unsigned int type,
     // check for some silly errors a user could make
     if (K <= 0)
         m_exec_conf->msg->warning() << "torsional.sin: specified K <= 0" << endl;
-    if (sign != 1 && sign != -1)
-        m_exec_conf->msg->warning()
-            << "torsional.sin: a non unitary sign was specified" << endl;
-    if (phi_0 < 0 || phi_0 >= 2 * M_PI)
-        m_exec_conf->msg->warning()
-            << "torsional.sin: specified phi_0 outside [0, 2pi)" << endl;
+
 
     ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
     ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
@@ -290,8 +269,8 @@ void TorsionalForceCompute::setParamsPython(std::string type, pybind11::dict par
     // make sure the type is valid
     auto typ = m_dihedral_data->getTypeByName(type);
     torsional_sin_params _params(params);
-    printf("Iam set Sin %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
-    setParams(typ, _params.k, _params.d, _params.n, _params.phi_0, _params.t_qx, _params.t_qy, _params.t_qz);
+    printf("Iam set Sin %f %f %f %f  \n",_params.k, _params.t_qx,_params.t_qy,_params.t_qz);
+    setParams(typ, _params.k,_params.t_qx, _params.t_qy, _params.t_qz);
     }
 
 pybind11::dict TorsionalForceCompute::getParams(std::string type)
@@ -301,9 +280,6 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
 
     pybind11::dict params;
     params["k"] = m_K[typ];
-    params["d"] = m_sign[typ];
-    params["n"] = m_multi[typ];
-    params["phi0"] = m_phi_0[typ];
     params["tqx"] = m_t_qx[typ];
     params["tqy"] = m_t_qy[typ];
     params["tqz"] = m_t_qz[typ];
