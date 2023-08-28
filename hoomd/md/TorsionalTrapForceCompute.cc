@@ -192,7 +192,7 @@ void TorsionalTrapForceCompute::setParams(unsigned int type,Scalar K)
 
     ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
     ArrayHandle<Scalar3> h_ref_vecp(m_ref_vecp, access_location::host, access_mode::readwrite);
-    ArrayHandle<Scalar3> h_ref_vecp(m_ref_vecp, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar3> h_ref_vecn(m_ref_vecn, access_location::host, access_mode::readwrite);
 
 
     ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
