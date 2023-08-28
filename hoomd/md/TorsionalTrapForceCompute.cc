@@ -498,6 +498,8 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
         Scalar tmpanglp = atan2(dab.y, dab.x) - atan2(refvecp.y,refvecp.x);
         Scalar tmpangln = atan2(ddc.y, ddc.x) - atan2(refvecn.y,refvecn.x);
+        tmpanglp = anglDiff(tmpanglp);
+        tmpangln = anglDiff(tmpangln);
 
         // if ((angl> ref_angl)||(angl<ref_angl))
         //     {
