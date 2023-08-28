@@ -466,6 +466,7 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         //####################################################################################################
         Scalar angl;
         Scalar diffangl;
+        Scalar ref_angl;
         Scalar tmpangl;
         Scalar oldangl;
         Scalar3 torqp;
@@ -490,56 +491,54 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         Scalar cs = slow::cos(angl);
         Scalar ss = slow::sin(angl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
-        if(m_sign[dihedral_type]==1)
-            {
-            if ((angl> M_PI)&&(angl<3*M_PI/2))
-                {
-                ss = slow::sin(angl- M_PI);
-                cs = slow::sin(angl- M_PI);
-                torqp.x =  0.0 ;
-                torqp.y =  0.0 ;
-                torqp.z =  -2*m_K[dihedral_type]*cs*ss;
-                torqn.x =  0.0 ;
-                torqn.y =  0.0 ;
-                torqn.z =  2*m_K[dihedral_type]*cs*ss;
-                }
-            else if (angl < 0)
-                {
-                torqp.x =  0.0 ;
-                torqp.y =  0.0 ;
-                torqp.z =  -2*m_K[dihedral_type]*cs*ss;
-                torqn.x =  0.0 ;
-                torqn.y =  0.0 ;
-                torqn.z =  2*m_K[dihedral_type]*cs*ss;
 
-                }
-            else if (angl == 0)
-                {
-                if (timestep < 10)
-                    {
-                    torqp.x =  m_t_qx[dihedral_type];
-                    torqp.y =  m_t_qy[dihedral_type];
-                    torqp.z =  m_t_qz[dihedral_type];
-                    torqn.x =  m_t_qx[dihedral_type];
-                    torqn.y =  m_t_qy[dihedral_type];
-                    torqn.z = -m_t_qz[dihedral_type];
-                    }
-                }
-            }
-        else if(m_sign[dihedral_type]==-1)
+        if ((angl> M_PI)&&(angl<3*M_PI/2))
             {
-            Scalar ref_angl;
-            ref_angl = h_ref_angles.data[i];
-            ss = slow::sin(angl- ref_angl);
-            cs = slow::sin(angl- ref_angl);
+            ss = slow::sin(angl- M_PI);
+            cs = slow::sin(angl- M_PI);
             torqp.x =  0.0 ;
             torqp.y =  0.0 ;
             torqp.z =  -2*m_K[dihedral_type]*cs*ss;
             torqn.x =  0.0 ;
             torqn.y =  0.0 ;
-            torqn.z =  -2*m_K[dihedral_type]*cs*ss;
+            torqn.z =  2*m_K[dihedral_type]*cs*ss;
+            }
+        else if (angl < 0)
+            {
+            torqp.x =  0.0 ;
+            torqp.y =  0.0 ;
+            torqp.z =  -2*m_K[dihedral_type]*cs*ss;
+            torqn.x =  0.0 ;
+            torqn.y =  0.0 ;
+            torqn.z =  2*m_K[dihedral_type]*cs*ss;
 
             }
+        else if (angl == 0)
+            {
+            if (timestep < 10)
+                {
+                torqp.x =  m_t_qx[dihedral_type];
+                torqp.y =  m_t_qy[dihedral_type];
+                torqp.z =  m_t_qz[dihedral_type];
+                torqn.x =  m_t_qx[dihedral_type];
+                torqn.y =  m_t_qy[dihedral_type];
+                torqn.z = -m_t_qz[dihedral_type];
+                }
+            }
+
+        // else if(m_sign[dihedral_type]==-1)
+        //     {
+        //     ref_angl = h_ref_angles.data[i];
+        //     ss = slow::sin(angl- ref_angl);
+        //     cs = slow::sin(angl- ref_angl);
+        //     torqp.x =  0.0 ;
+        //     torqp.y =  0.0 ;
+        //     torqp.z =  -2*m_K[dihedral_type]*cs*ss;
+        //     torqn.x =  0.0 ;
+        //     torqn.y =  0.0 ;
+        //     torqn.z =  -2*m_K[dihedral_type]*cs*ss;
+        //
+        //     }
         h_torque.data[rtagp].x += torqp.x;
         h_torque.data[rtagp].y += torqp.y;
         h_torque.data[rtagp].z += torqp.z;
