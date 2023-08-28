@@ -446,11 +446,25 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         dab = box.minImage(dab);
         // dcb = box.minImage(dcb);
         ddc = box.minImage(ddc);
+        Scalar3 refvecp;
+        Scalar3 refvecn;
+        refvecp.x = h_ref_vecp.data[m_ref_vecp_value(i, type)].x;
+        refvecp.y = h_ref_vecp.data[m_ref_vecp_value(i, type)].y;
+        refvecp.z = h_ref_vecp.data[m_ref_vecp_value(i, type)].z;
+
+        refvecn.x = h_ref_vecn.data[m_ref_vecn_value(i, type)].x;
+        refvecn.y = h_ref_vecn.data[m_ref_vecn_value(i, type)].y;
+        refvecn.z = h_ref_vecn.data[m_ref_vecn_value(i, type)].z;
         //####################################################################################################
-        Scalar3 crossp;
-        Scalar3 crossn;
-        Scalar dotp;
-        Scalar dotn;
+        // Scalar rsqp = dab.x*dab.x + dab.y*dab.y + dab.z*dab.z;
+        // Scalar rsqrtp = sqrt(rsqp);
+        // Scalar rsqn = ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z;
+        // Scalar rsqrtn = sqrt(rsqn);
+        // Scalar3
+        // Scalar3 crossp;
+        // Scalar3 crossn;
+        // Scalar dotp;
+        // Scalar3 dotn;
         Scalar angl;
         Scalar diffangl;
         Scalar ref_angl;
@@ -477,20 +491,26 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         ref_angl = h_ref_angles.data[i];
         //printf("%d %f \n",i,angl);
         h_angles.data[i] = angl;
-        Scalar cs;
-        Scalar ss;
+        Scalar csp;
+        Scalar ssp;
+        Scalar csn;
+        Scalar ssn;
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
+        tmpanglp = atan2(dab.y, dab.x) - atan2(refvecp.y,refvecp.x);
+        tmpangln = atan2(ddc.y, ddc.x) - atan2(refvecn.y,refvecn.x);
 
         // if ((angl> ref_angl)||(angl<ref_angl))
         //     {
-        ss = slow::sin(tmpangl- ref_angl);
-        cs = slow::cos(tmpangl- ref_angl);
+        ssp = slow::sin(tmpanglp);
+        csp = slow::cos(tmpanglp);
+        ssn = slow::sin(tmpangln);
+        csn = slow::cos(tmpangln);
         torqp.x =  0.0 ;
         torqp.y =  0.0 ;
-        torqp.z =  -2*m_K[dihedral_type]*cs*ss;
+        torqp.z =  2*m_K[dihedral_type]*csp*ssp;
         torqn.x =  0.0 ;
         torqn.y =  0.0 ;
-        torqn.z =  -2*m_K[dihedral_type]*cs*ss;
+        torqn.z =  2*m_K[dihedral_type]*csn*ssn;
         //}
 
 
