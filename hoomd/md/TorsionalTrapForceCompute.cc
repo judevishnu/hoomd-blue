@@ -249,7 +249,7 @@ void TorsionalTrapForceCompute::setParamsPython(std::string type, pybind11::dict
     // make sure the type is valid
     auto typ = m_dihedral_data->getTypeByName(type);
     torsionaltrap_sin_params _params(params);
-    //printf("Iam set %f %f %d %f %f %f %f \n",_params.k, _params.d, _params.n, _params.phi_0, _params.t_qx,_params.t_qy,_params.t_qz);
+    printf("Iam Trap %f \n",_params.k);
     setParams(typ, _params.k);
     }
 
