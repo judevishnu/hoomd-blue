@@ -257,13 +257,26 @@ void TorsionalTrapForceCompute::setParams(unsigned int type,Scalar K)
         h_oldnew_angles.data[m_oldnew_value(i, type)].y = angl;
         h_ref_angles.data[i] = angl;
         h_angles.data[i] = 0;
-        h_ref_vecp.data[m_ref_vecp_value(i, type)].x = dab.x;
-        h_ref_vecp.data[m_ref_vecp_value(i, type)].y = dab.y;
-        h_ref_vecp.data[m_ref_vecp_value(i, type)].z = dab.z;
+        Scalar rsqdab = dab.x*dab.x + dab.y*dab.y + dab.z*dab.z;
+        Scalar rsqrtdab = sqrt(rsqdab);
+        Scalar rsqddc = ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z;
+        Scalar rsqrtddc = sqrt(rsqddc);
+        Scalar3 unitdab;
+        unitdab.x = dab.x/rsqrtdab;
+        unitdab.y = dab.y/rsqrtdab;
+        unitdab.z = dab.z/rsqrtdab;
+        Scalar3 unitddc;
+        unitddc.x = ddc.x/rsqrtddc;
+        unitddc.y = ddc.y/rsqrtddc;
+        unitddc.z = ddc.z/rsqrtddc;
 
-        h_ref_vecn.data[m_ref_vecn_value(i, type)].x = ddc.x;
-        h_ref_vecn.data[m_ref_vecn_value(i, type)].y = ddc.y;
-        h_ref_vecn.data[m_ref_vecn_value(i, type)].z = ddc.z;
+        h_ref_vecp.data[m_ref_vecp_value(i, type)].x = unitdab.x;
+        h_ref_vecp.data[m_ref_vecp_value(i, type)].y = unitdab.y;
+        h_ref_vecp.data[m_ref_vecp_value(i, type)].z = unitdab.z;
+
+        h_ref_vecn.data[m_ref_vecn_value(i, type)].x = unitddc.x;
+        h_ref_vecn.data[m_ref_vecn_value(i, type)].y = unitddc.y;
+        h_ref_vecn.data[m_ref_vecn_value(i, type)].z = unitddc.z;
 
         }
 
@@ -441,11 +454,26 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         ddc.x = h_pos.data[rtagnside].x - h_pos.data[rtagn].x;
         ddc.y = h_pos.data[rtagnside].y - h_pos.data[rtagn].y;
         ddc.z = h_pos.data[rtagnside].z - h_pos.data[rtagn].z;
-        //
+
+
+
         // apply periodic boundary conditions
         dab = box.minImage(dab);
         // dcb = box.minImage(dcb);
         ddc = box.minImage(ddc);
+        Scalar rsqdab = dab.x*dab.x + dab.y*dab.y + dab.z*dab.z;
+        Scalar rsqrtdab = sqrt(rsqdab);
+        Scalar rsqddc = ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z;
+        Scalar rsqrtddc = sqrt(rsqddc);
+        Scalar3 unitdab;
+        unitdab.x = dab.x/rsqrtdab;
+        unitdab.y = dab.y/rsqrtdab;
+        unitdab.z = dab.z/rsqrtdab;
+        Scalar3 unitddc;
+        unitddc.x = ddc.x/rsqrtddc;
+        unitddc.y = ddc.y/rsqrtddc;
+        unitddc.z = ddc.z/rsqrtddc;
+
         Scalar3 refvecp;
         Scalar3 refvecn;
         refvecp.x = h_ref_vecp.data[m_ref_vecp_value(i, dihedral_type)].x;
@@ -456,11 +484,9 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         refvecn.y = h_ref_vecn.data[m_ref_vecn_value(i, dihedral_type)].y;
         refvecn.z = h_ref_vecn.data[m_ref_vecn_value(i, dihedral_type)].z;
         //####################################################################################################
-        // Scalar rsqp = dab.x*dab.x + dab.y*dab.y + dab.z*dab.z;
-        // Scalar rsqrtp = sqrt(rsqp);
-        // Scalar rsqn = ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z;
-        // Scalar rsqrtn = sqrt(rsqn);
-        // Scalar3
+
+
+
         // Scalar3 crossp;
         // Scalar3 crossn;
         // Scalar dotp;
@@ -481,6 +507,18 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         torqn.z = 0.0;
 
         //dotn = dab.x*ddc.x;
+        Scalar dotp = refvecp.x*unitdab.x+refvecp.y*unitdab.y+refvecp.z*unitdab.z;
+        Scalar dotn = refvecn.x*unitddc.x+refvecn.y*unitddc.y+refvecn.z*unitddc.z;
+        Scalar3 crossp;
+        Scalar3 crossn;
+        crossp.x = unitdab.y*refvecp.z - unitdab.z*refvecp.y;
+        crossp.y = unitdab.z*refvecp.x - unitdab.x*refvecp.z;
+        crossp.z = unitdab.x*refvecp.y - unitdab.y*refvecp.x;
+
+        crossn.x = unitddc.y*refvecn.z - unitddc.z*refvecn.y;
+        crossn.y = unitddc.z*refvecn.x - unitddc.x*refvecn.z;
+        crossn.z = unitddc.x*refvecn.y - unitddc.y*refvecn.x;
+
         tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
         tmpangl = anglDiff(tmpangl);
         oldangl = h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x;
@@ -491,28 +529,29 @@ void TorsionalTrapForceCompute::computeForces(uint64_t timestep)
         ref_angl = h_ref_angles.data[i];
         //printf("%d %f \n",i,angl);
         h_angles.data[i] = angl;
-        Scalar csp;
-        Scalar ssp;
-        Scalar csn;
-        Scalar ssn;
+        // Scalar csp;
+        // Scalar ssp;
+        // Scalar csn;
+        // Scalar ssn;
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
-        Scalar tmpanglp = atan2(dab.y, dab.x) - atan2(refvecp.y,refvecp.x);
-        Scalar tmpangln = atan2(ddc.y, ddc.x) - atan2(refvecn.y,refvecn.x);
-        tmpanglp = anglDiff(tmpanglp);
-        tmpangln = anglDiff(tmpangln);
+        // Scalar tmpanglp = atan2(dab.y, dab.x) - atan2(refvecp.y,refvecp.x);
+        // Scalar tmpangln = atan2(ddc.y, ddc.x) - atan2(refvecn.y,refvecn.x);
+        // tmpanglp = anglDiff(tmpanglp);
+        // tmpangln = anglDiff(tmpangln);
+        //
+        // // if ((angl> ref_angl)||(angl<ref_angl))
+        // //     {
+        // ssp = slow::sin(tmpanglp);
+        // csp = slow::cos(tmpanglp);
+        // ssn = slow::sin(tmpangln);
+        // csn = slow::cos(tmpangln);
+        torqp.x =  2*m_K[dihedral_type]*dotp*crossp.x;
+        torqp.y =  2*m_K[dihedral_type]*dotp*crossp.y;
+        torqp.z =  2*m_K[dihedral_type]*dotp*crossp.z;
 
-        // if ((angl> ref_angl)||(angl<ref_angl))
-        //     {
-        ssp = slow::sin(tmpanglp);
-        csp = slow::cos(tmpanglp);
-        ssn = slow::sin(tmpangln);
-        csn = slow::cos(tmpangln);
-        torqp.x =  0.0 ;
-        torqp.y =  0.0 ;
-        torqp.z =  2*m_K[dihedral_type]*csp*ssp;
-        torqn.x =  0.0 ;
-        torqn.y =  0.0 ;
-        torqn.z =  2*m_K[dihedral_type]*csn*ssn;
+        torqn.x =  2*m_K[dihedral_type]*dotn*crossn.x;
+        torqn.y =  2*m_K[dihedral_type]*dotn*crossn.y;
+        torqn.z =  2*m_K[dihedral_type]*dotn*crossn.z;;
         //}
 
 
