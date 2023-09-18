@@ -5,6 +5,7 @@
 #include "hoomd/BondedGroupData.cuh"
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/ParticleData.cuh"
+#include "hoomd/Index1D.h"
 
 /*! \file HarmonicDihedralForceGPU.cuh
     \brief Declares GPU kernel code for calculating the harmonic dihedral forces. Used by
