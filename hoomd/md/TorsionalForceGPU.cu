@@ -3,6 +3,11 @@
 
 #include "TorsionalForceGPU.cuh"
 #include "hoomd/TextureTools.h"
+#include <iostream>
+#include <math.h>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
 
 #include <assert.h>
 
@@ -56,7 +61,12 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     unsigned int typval = d_group_typeval[group_idx].type;
     //printf("%u \n", typva);
     Scalar4 params = __ldg(d_params + typval);
-    printf("%u %f %f %f %f \n", typval,params.x,params.y,params.z,params.w);
+    printf("%u %u %f %f %f %f \n", group_idx,typval,params.x,params.y,params.z,params.w);
+
+    Scalar K = params.x;
+    Scalar tqx = params.y;
+    Scalar tqy = params.z;
+    Scalar tqz = params.w;
 
     unsigned int tagp = d_index_array1[group_idx];
     unsigned int tagn = d_index_array2[group_idx];
@@ -66,6 +76,83 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar4 pos_c = __ldg(d_pos + tagn);
     Scalar4 pos_a = __ldg(d_pos + tagpside);
     Scalar4 pos_d = __ldg(d_pos + tagnside);
+    Scalar3 dab;
+    dab.x = pos_a.x - pos_b.x;
+    dab.y = pos_a.y - pos_b.y;
+    dab.z = pos_a.z - pos_b.z;
+
+    Scalar3 ddc;
+    ddc.x = pos_d.x - pos_c.x;
+    ddc.y = pos_d.y - pos_c.y;
+    ddc.z = pos_d.z - pos_c.z;
+
+    dab = box.minImage(dab);
+
+    ddc = box.minImage(ddc);
+
+    //####################################################################################################
+    Scalar angl;
+    Scalar diffangl;
+    Scalar ref_angl;
+    Scalar tmpangl;
+    Scalar oldangl;
+    Scalar3 torqp;
+    Scalar3 torqn;
+    Scalar3 constT;
+    torqp.x = 0.0;
+    torqp.y = 0.0;
+    torqp.z = 0.0;
+    torqn.x = 0.0;
+    torqn.y = 0.0;
+    torqn.z = 0.0;
+
+    tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
+    tmpangl = anglDiff(tmpangl);
+    oldangl = d_oldnew_angles.data[m_oldnew_value(group_idx, typval)].x;
+    diffangl = tmpangl - oldangl;
+    diffangl = anglDiff(diffangl);
+    d_oldnew_angles.data[m_oldnew_value(group_idx, typval)].y = tmpangl;
+    angl = d_angles.data[group_idx]+diffangl;
+    //printf("%d %f \n",i,angl);
+    d_angles.data[group_idx] = angl;
+    Scalar cs = slow::cos(angl);
+    Scalar ss = slow::sin(angl);
+    d_oldnew_angles.data[m_oldnew_value(group_idx, typval)].x = tmpangl;
+
+    if ((angl> M_PI)&&(angl<3*M_PI/2))
+        {
+        ss = slow::sin(angl- M_PI);
+        cs = slow::cos(angl- M_PI);
+        torqp.x =  0.0 ;
+        torqp.y =  0.0 ;
+        torqp.z =  -2*K*cs*ss;
+        torqn.x =  0.0 ;
+        torqn.y =  0.0 ;
+        torqn.z =  2*K*cs*ss;
+        }
+    else if (angl < 0)
+        {
+        torqp.x =  0.0 ;
+        torqp.y =  0.0 ;
+        torqp.z =  -2*K*cs*ss;
+        torqn.x =  0.0 ;
+        torqn.y =  0.0 ;
+        torqn.z =  2*K*cs*ss;
+
+        }
+    else if (angl == 0)
+        {
+        if (timestep < 10)
+            {
+            torqp.x =  tqx;
+            torqp.y =  tqy;
+            torqp.z =  tqz;
+            torqn.x =  tqx;
+            torqn.y =  tqy;
+            torqn.z = -tqz;
+            }
+        }
+
     //unsigned int type = __scalar_as_int(posidx.w);
 
 
