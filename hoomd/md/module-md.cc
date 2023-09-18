@@ -162,7 +162,7 @@ void export_ComputeThermoHMAGPU(pybind11::module& m);
 void export_HarmonicAngleForceComputeGPU(pybind11::module& m);
 void export_CosineSqAngleForceComputeGPU(pybind11::module& m);
 void export_TableAngleForceComputeGPU(pybind11::module& m);
-void export_TorsionalForceCompute(pybind11::module& m);
+void export_TorsionalForceComputeGPU(pybind11::module& m);
 void export_HarmonicDihedralForceComputeGPU(pybind11::module& m);
 void export_OPLSDihedralForceComputeGPU(pybind11::module& m);
 void export_TableDihedralForceComputeGPU(pybind11::module& m);
