@@ -28,6 +28,20 @@ namespace md
     {
 namespace kernel
     {
+
+//! GPU implementation of anglDiff
+__device__ Scalar gpu_anglDiff(Scalar diff)
+    {
+    if (diff > M_PI)
+        {
+        diff -= 2 * M_PI;
+        }
+    else if (diff <= -M_PI)
+        {
+        diff += 2 * M_PI;
+        }
+    return diff;
+    }
 //! Kernel for calculating harmonic dihedral forces on the GPU
 /*! \param d_force Device memory to write computed forces
     \param d_virial Device memory to write computed virials
@@ -107,17 +121,17 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     torqn.z = 0.0;
 
     tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
-    tmpangl = anglDiff(tmpangl);
-    oldangl = d_oldnew_angles.data[m_oldnew_value(group_idx, typval)].x;
+    tmpangl = gpu_anglDiff(tmpangl);
+    oldangl = d_oldnew_angles.data[d_oldnew_value(group_idx, typval)].x;
     diffangl = tmpangl - oldangl;
-    diffangl = anglDiff(diffangl);
-    d_oldnew_angles.data[m_oldnew_value(group_idx, typval)].y = tmpangl;
+    diffangl = gpu_anglDiff(diffangl);
+    d_oldnew_angles.data[d_oldnew_value(group_idx, typval)].y = tmpangl;
     angl = d_angles.data[group_idx]+diffangl;
     //printf("%d %f \n",i,angl);
     d_angles.data[group_idx] = angl;
     Scalar cs = slow::cos(angl);
     Scalar ss = slow::sin(angl);
-    d_oldnew_angles.data[m_oldnew_value(group_idx, typval)].x = tmpangl;
+    d_oldnew_angles.data[d_oldnew_value(group_idx, typval)].x = tmpangl;
 
     if ((angl> M_PI)&&(angl<3*M_PI/2))
         {
