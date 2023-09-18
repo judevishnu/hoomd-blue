@@ -52,7 +52,7 @@ class PYBIND11_EXPORT TorsionalForceComputeGPU : public TorsionalForceCompute
 
     //! Set the parameters
     virtual void
-    setParams(unsigned int type, Scalar K, Scalar sign, int multiplicity, Scalar phi_0);
+    setParams(unsigned int type,Scalar K, Scalar t_qx, Scalar t_qy, Scalar t_qz);
 
     protected:
     std::unique_ptr<Autotuner> m_tuner; //!< Autotuner for block size
