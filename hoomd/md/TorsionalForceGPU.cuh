@@ -34,6 +34,7 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                                                 const Index2D& d_oldnew_value,
                                                 const typeval_union* d_group_typeval,
                                                 Scalar4* d_params,
+                                                uint64_t timestep,
                                                 unsigned int block_size);
 
     } // end namespace kernel
