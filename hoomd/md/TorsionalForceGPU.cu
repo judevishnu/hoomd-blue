@@ -172,13 +172,13 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
             torqn.z = -tqz;
             }
         }
-    d_torque[tagp].x += torqp.x;
-    d_torque[tagp].y += torqp.y;
-    d_torque[tagp].z += torqp.z;
+    d_torque[tagp].x = torqp.x;
+    d_torque[tagp].y = torqp.y;
+    d_torque[tagp].z = torqp.z;
     d_torque[tagp].w = 0;
-    d_torque[tagn].x += torqn.x;
-    d_torque[tagn].y += torqn.y;
-    d_torque[tagn].z += torqn.z;
+    d_torque[tagn].x = torqn.x;
+    d_torque[tagn].y = torqn.y;
+    d_torque[tagn].z = torqn.z;
     d_torque[tagn].w = 0;
 
 

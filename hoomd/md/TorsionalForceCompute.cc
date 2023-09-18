@@ -503,13 +503,13 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
             }
 
 
-        h_torque.data[rtagp].x += torqp.x;
-        h_torque.data[rtagp].y += torqp.y;
-        h_torque.data[rtagp].z += torqp.z;
+        h_torque.data[rtagp].x = torqp.x;
+        h_torque.data[rtagp].y = torqp.y;
+        h_torque.data[rtagp].z = torqp.z;
         h_torque.data[rtagp].w = 0;
-        h_torque.data[rtagn].x += torqn.x;
-        h_torque.data[rtagn].y += torqn.y;
-        h_torque.data[rtagn].z += torqn.z;
+        h_torque.data[rtagn].x = torqn.x;
+        h_torque.data[rtagn].y = torqn.y;
+        h_torque.data[rtagn].z = torqn.z;
         h_torque.data[rtagn].w = 0;
 
 
