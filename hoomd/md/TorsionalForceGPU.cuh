@@ -11,9 +11,8 @@
    HarmonicDihedralForceComputeGPU.
 */
 
-#ifndef __HARMONICDIHEDRALFORCEGPU_CUH__
-#define __HARMONICDIHEDRALFORCEGPU_CUH__
-
+#ifndef __TORSIONALFORCEGPU_CUH__
+#define __TORSIONALFORCEGPU_CUH__
 namespace hoomd
     {
 namespace md
@@ -21,20 +20,20 @@ namespace md
 namespace kernel
     {
 //! Kernel driver that computes harmonic dihedral forces for HarmonicDihedralForceComputeGPU
-hipError_t gpu_compute_harmonic_dihedral_forces(Scalar4* d_force,
-                                                Scalar* d_virial,
-                                                const size_t virial_pitch,
-                                                const unsigned int N,
+hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const BoxDim& box,
                                                 const Scalar4* d_pos,
-                                                const BoxDim& box,
-                                                const group_storage<4>* tlist,
-                                                const unsigned int* dihedral_ABCD,
-                                                const unsigned int pitch,
-                                                const unsigned int* n_dihedrals_list,
+                                                Scalar4* d_torque,
+                                                unsigned int* d_index_array1,
+                                                unsigned int* d_index_array2,
+                                                unsigned int* d_index_array3,
+                                                unsigned int* d_index_array4,
+                                                Scalar* d_ref_angles,
+                                                Scalar* d_angles,
+                                                Scalar2* d_oldnew_angles,
+                                                const Index2D& d_oldnew_value,
+                                                const typeval_union* d_group_typeval,
                                                 Scalar4* d_params,
-                                                unsigned int n_dihedral_types,
-                                                int block_size,
-                                                int warp_size);
+                                                unsigned int block_size);
 
     } // end namespace kernel
     } // end namespace md

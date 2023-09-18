@@ -12,8 +12,8 @@
     \brief Declares the HarmonicDihedralForceGPU class
 */
 
-#ifndef __HARMONICDIHEDRALFORCECOMPUTEGPU_H__
-#define __HARMONICDIHEDRALFORCECOMPUTEGPU_H__
+#ifndef __TORSIONALFORCECOMPUTEGPU_H__
+#define __TORSIONALFORCECOMPUTEGPU_H__
 
 namespace hoomd
     {
