@@ -67,7 +67,8 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
                                                        Scalar2* d_oldnew_angles,
                                                        const Index2D d_oldnew_value,
                                                        const typeval_union* d_group_typeval,
-                                                       const Scalar4* d_params)
+                                                       const Scalar4* d_params,
+                                                       uint64_t timestep)
     {
     unsigned int group_idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (group_idx >= group_size)
@@ -122,16 +123,16 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
 
     tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
     tmpangl = gpu_anglDiff(tmpangl);
-    oldangl = d_oldnew_angles.data[d_oldnew_value(group_idx, typval)].x;
+    oldangl = d_oldnew_angles[d_oldnew_value(group_idx, typval)].x;
     diffangl = tmpangl - oldangl;
     diffangl = gpu_anglDiff(diffangl);
-    d_oldnew_angles.data[d_oldnew_value(group_idx, typval)].y = tmpangl;
-    angl = d_angles.data[group_idx]+diffangl;
+    d_oldnew_angles[d_oldnew_value(group_idx, typval)].y = tmpangl;
+    angl = d_angles[group_idx]+diffangl;
     //printf("%d %f \n",i,angl);
-    d_angles.data[group_idx] = angl;
+    d_angles[group_idx] = angl;
     Scalar cs = slow::cos(angl);
     Scalar ss = slow::sin(angl);
-    d_oldnew_angles.data[d_oldnew_value(group_idx, typval)].x = tmpangl;
+    d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
 
     if ((angl> M_PI)&&(angl<3*M_PI/2))
         {
@@ -730,6 +731,7 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                                                 // const unsigned int pitch,
                                                 // const unsigned int* n_dihedrals_list,
                                                 Scalar4* d_params,
+                                                uint64_t timestep,
                                                 // unsigned int n_dihedral_types,
                                                 unsigned int block_size)
                                                 //,int warp_size)
@@ -766,7 +768,8 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                        d_oldnew_angles,
                        d_oldnew_value,
                        d_group_typeval,
-                       d_params);
+                       d_params,
+                       timestep);
                        // 0,
                        // 0,
                        // d_force,

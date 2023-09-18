@@ -204,6 +204,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
                                                  m_oldnew_value,
                                                  d_group_typeval.data,
                                                  d_params.data,
+                                                 timestep,
                                                  this->m_tuner->getParam());
                                                  //,this->m_exec_conf->dev_prop.warpSize);
     if (m_exec_conf->isCUDAErrorCheckingEnabled())
