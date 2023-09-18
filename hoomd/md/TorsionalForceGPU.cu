@@ -665,7 +665,7 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                        d_oldnew_angles,
                        d_oldnew_value,
                        d_group_typeval,
-                       d_params)
+                       d_params);
                        // 0,
                        // 0,
                        // d_force,
