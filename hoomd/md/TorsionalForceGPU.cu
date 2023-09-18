@@ -653,7 +653,7 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
 
     // run the kernel
     hipLaunchKernelGGL((gpu_compute_torsional_sin_force_kernel),
-                       dim3(grid),dim3(threads),group_size,box,
+                       dim3(grid),dim3(threads),0,0,group_size,box,
                        d_pos,
                        d_torque,
                        d_index_array1,
