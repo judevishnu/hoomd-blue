@@ -121,7 +121,8 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     torqn.x = 0.0;
     torqn.y = 0.0;
     torqn.z = 0.0;
-
+    tmpangl = 0;
+    angl = 0;
     tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
     tmpangl = gpu_anglDiff(tmpangl);
     oldangl = d_oldnew_angles[d_oldnew_value(group_idx, typval)].x;
