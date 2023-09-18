@@ -56,7 +56,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     unsigned int typval = d_group_typeval[group_idx].type;
     //printf("%u \n", typva);
     Scalar4 params = __ldg(d_params + typval);
-    printf("%u %f %f %f \n", typval,params[0],params[1],params[2]);
+    printf("%u %f %f %f %f \n", typval,params.x,params.y,params.z,params.w);
 
     unsigned int tagp = d_index_array1[group_idx];
     unsigned int tagn = d_index_array2[group_idx];
