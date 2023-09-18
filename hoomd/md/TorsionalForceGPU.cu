@@ -87,10 +87,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     unsigned int tagn = d_index_array2[group_idx];
     unsigned int tagpside = d_index_array3[group_idx];
     unsigned int tagnside = d_index_array4[group_idx];
-    if (group_idx==0)
-    {
-    printf("%u %u %u %u \n",tagp,tagn,tagpside,tagnside);
-    }
+
     Scalar4 pos_b = __ldg(d_pos + tagp);
     Scalar4 pos_c = __ldg(d_pos + tagn);
     Scalar4 pos_a = __ldg(d_pos + tagpside);
@@ -137,7 +134,10 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar cs = slow::cos(angl);
     Scalar ss = slow::sin(angl);
     d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
-
+    if (group_idx==0)
+    {
+    printf("%u %u %u %u %f \n",tagp,tagn,tagpside,tagnside,angl);
+    }
     if ((angl> M_PI)&&(angl<3*M_PI/2))
         {
         ss = slow::sin(angl- M_PI);
@@ -171,6 +171,14 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
             torqn.z = -tqz;
             }
         }
+    d_torque[tagp].x += torqp.x;
+    d_torque[tagp].y += torqp.y;
+    d_torque[tagp].z += torqp.z;
+    d_torque[tagp].w = 0;
+    d_torque[tagn].x += torqn.x;
+    d_torque[tagn].y += torqn.y;
+    d_torque[tagn].z += torqn.z;
+    d_torque[tagn].w = 0;
 
 
     }
