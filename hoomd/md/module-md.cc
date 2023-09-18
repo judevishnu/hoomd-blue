@@ -149,6 +149,7 @@ void export_PotentialPairAlchemicalLJGauss(pybind11::module& m);
 
 #ifdef ENABLE_HIP
 
+void export_TorsionalForceComputeGPU(pybind11::module& m);
 void export_ActiveForceConstraintComputeCylinderGPU(pybind11::module& m);
 void export_ActiveForceConstraintComputeDiamondGPU(pybind11::module& m);
 void export_ActiveForceConstraintComputeEllipsoidGPU(pybind11::module& m);
@@ -162,7 +163,6 @@ void export_ComputeThermoHMAGPU(pybind11::module& m);
 void export_HarmonicAngleForceComputeGPU(pybind11::module& m);
 void export_CosineSqAngleForceComputeGPU(pybind11::module& m);
 void export_TableAngleForceComputeGPU(pybind11::module& m);
-void export_TorsionalForceComputeGPU(pybind11::module& m);
 void export_HarmonicDihedralForceComputeGPU(pybind11::module& m);
 void export_OPLSDihedralForceComputeGPU(pybind11::module& m);
 void export_TableDihedralForceComputeGPU(pybind11::module& m);
@@ -373,6 +373,7 @@ PYBIND11_MODULE(_md, m)
     export_PotentialExternalWallMorse(m);
 
 #ifdef ENABLE_HIP
+    export_TorsionalForceComputeGPU(m);
     export_NeighborListGPU(m);
     export_NeighborListGPUBinned(m);
     export_NeighborListGPUStencil(m);
@@ -428,7 +429,7 @@ PYBIND11_MODULE(_md, m)
     export_HarmonicAngleForceComputeGPU(m);
     export_CosineSqAngleForceComputeGPU(m);
     export_TableAngleForceComputeGPU(m);
-    export_TorsionalForceComputeGPU(m);
+
     export_HarmonicDihedralForceComputeGPU(m);
     export_OPLSDihedralForceComputeGPU(m);
     export_TableDihedralForceComputeGPU(m);
