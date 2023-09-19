@@ -174,7 +174,9 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar disttwo =  slow::rsqrt(dot(ddc, ddc));
     if(group_idx==0)
       {
-      printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
+      //printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
+      printf("GPU %u %u %u %u %u %u \n",timestep,group_idx,tagp,tagn,tagpside,tagnside);
+
       }
     if ((angl> M_PI)&&(angl<3*M_PI/2))
       {

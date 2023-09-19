@@ -219,7 +219,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     {
       if(k==0)
         {
-        printf("%u %u %u %u",h_index_array1.data[k],h_index_array2.data[k],h_index_array3.data[k],h_index_array4.data[k]);
+        printf("CPU %u %u %u %u %u %u \n",timestep,k,h_index_array1.data[k],h_index_array2.data[k],h_index_array3.data[k],h_index_array4.data[k]);
         }
     }
     unsigned int N = m_pdata->getN();
