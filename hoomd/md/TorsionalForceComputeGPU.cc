@@ -219,13 +219,13 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<unsigned int> h_index_array4(m_group4->getIndexArray(),access_location::host,access_mode::read);
 
     unsigned int group_size = m_group1->getNumMembers();
-    if(timestep==100)
-    {
-    exit(0);
-    }
+    // if(timestep==100)
+    // {
+    // exit(0);
+    // }
     for(unsigned int k=0;k<group_size;k=k+1)
     {
-      if(k==0)
+      if(k==50)
         {
         unsigned int rtagp = h_rtag.data[h_index_array1.data[k]];
         unsigned int rtagn = h_rtag.data[h_index_array2.data[k]];

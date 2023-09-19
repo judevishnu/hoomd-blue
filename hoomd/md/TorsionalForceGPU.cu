@@ -177,7 +177,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
         {
         tmpangl += 2 * M_PI;
         }
-    Scalar2 TMPoldnew_angles = d_oldnew_angles[d_oldnew_value(group_idx, typval)];
+    Scalar2 TMPoldnew_angles = __ldg(d_oldnew_angles+d_oldnew_value(group_idx, typval));
     oldangl = TMPoldnew_angles.x;
     diffangl = tmpangl - oldangl;
     //diffangl = gpu_anglDiff(diffangl);
@@ -207,7 +207,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
 
     Scalar distone1 =  sqrt(dab1.x*dab1.x + dab1.y*dab1.y + dab1.z*dab1.z);
     Scalar disttwo1 =  sqrt(ddc1.x*ddc1.x + ddc1.y*ddc1.y + ddc1.z*ddc1.z);
-    if(group_idx==512-5)
+    if(group_idx==50)
       {
       //printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
       printf("GPU %lu %u %u %u %u %u %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,distone,disttwo);
