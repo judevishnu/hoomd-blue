@@ -33,6 +33,22 @@ TorsionalForceComputeGPU::TorsionalForceComputeGPU(
     GPUArray<Scalar4> params(m_dihedral_data->getNTypes(), m_exec_conf);
     m_params.swap(params);
 
+    GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    m_angles.swap(angles);
+
+    GPUArray<Scalar> ref_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    m_ref_angles.swap(ref_angles);
+
+    GPUArray<Scalar2> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    m_oldnew_angles.swap(oldnew_angles);
+
+    assert(!m_angles.isNull());
+    assert(!m_ref_angles.isNull());
+    assert(!m_oldnew_angles.isNull());
+    Index2D oldnew_value((unsigned int)m_oldnew_angles.getPitch(),
+                        (unsigned int)m_dihedral_data->getNTypes());
+    m_oldnew_value = oldnew_value;
+    
     unsigned int warp_size = m_exec_conf->dev_prop.warpSize;
     m_tuner.reset(new Autotuner(warp_size,
                                 1024,
@@ -41,6 +57,8 @@ TorsionalForceComputeGPU::TorsionalForceComputeGPU(
                                 100000,
                                 "torsional_sin",
                                 this->m_exec_conf));
+
+
     }
 
 TorsionalForceComputeGPU::~TorsionalForceComputeGPU() { }
@@ -63,73 +81,73 @@ void TorsionalForceComputeGPU::setParams(unsigned int type,Scalar K, Scalar t_qx
     h_params.data[type]
         = make_scalar4(Scalar(K), Scalar(t_qx), Scalar(t_qy), Scalar(t_qz));
 
-    // ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
-    // ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
-    //
-    // ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
-    //
-    // ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
-    // ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
-    //
-    //
-    // // get a local copy of the simulation box too
-    // const BoxDim& box = m_pdata->getBox();
+    ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
 
-    // for (unsigned int i = 0; i < m_num_angles; i++)
-    //     {
-    //
-    //     // const ImproperData::members_t& dihedral = m_dihedral_data->getMembersByIndex(i);
-    //     // assert(dihedral.tag[0] <= m_pdata->getMaximumTag());
-    //     // assert(dihedral.tag[1] <= m_pdata->getMaximumTag());
-    //     // assert(dihedral.tag[2] <= m_pdata->getMaximumTag());
-    //     // assert(dihedral.tag[3] <= m_pdata->getMaximumTag());
-    //
-    //     // transform a, b, and c into indices into the particle data arrays
-    //     // MEM TRANSFER: 6 ints
-    //     // unsigned int idx_a = h_rtag.data[dihedral.tag[0]];
-    //     // unsigned int idx_b = h_rtag.data[dihedral.tag[1]];
-    //     // unsigned int idx_c = h_rtag.data[dihedral.tag[2]];
-    //     // unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
-    //     // unsigned int idp = m_group1->getMemberIndex(i);
-    //     // unsigned int idn = m_group2->getMemberIndex(i);
-    //     unsigned int tagp = m_group1->getMemberTag(i);
-    //     unsigned int tagn = m_group2->getMemberTag(i);
-    //     unsigned int tagpside = m_group3->getMemberTag(i);
-    //     unsigned int tagnside = m_group4->getMemberTag(i);
-    //     unsigned int rtagp = h_rtag.data[tagp];
-    //     unsigned int rtagn = h_rtag.data[tagn];
-    //     unsigned int rtagpside = h_rtag.data[tagpside];
-    //     unsigned int rtagnside = h_rtag.data[tagnside];
-    //     unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
-    //
-    //     // assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
-    //     // assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
-    //     // assert(idx_c < m_pdata->getN() + m_pdata->getNGhosts());
-    //     // assert(idx_d < m_pdata->getN() + m_pdata->getNGhosts());
-    //
-    //     // calculate d\vec{r}
-    //     Scalar3 dab;
-    //     dab.x = h_pos.data[rtagpside].x - h_pos.data[rtagp].x;
-    //     dab.y = h_pos.data[rtagpside].y - h_pos.data[rtagp].y;
-    //     dab.z = h_pos.data[rtagpside].z - h_pos.data[rtagp].z;
-    //
-    //
-    //     Scalar3 ddc;
-    //     ddc.x = h_pos.data[rtagnside].x - h_pos.data[rtagn].x;
-    //     ddc.y = h_pos.data[rtagnside].y - h_pos.data[rtagn].y;
-    //     ddc.z = h_pos.data[rtagnside].z - h_pos.data[rtagn].z;
-    //
-    //     dab = box.minImage(dab);
-    //     ddc = box.minImage(ddc);
-    //     //####################################################################################################
-    //     Scalar angl;
-    //     angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
-    //     h_oldnew_angles.data[m_oldnew_value(i, type)].x = angl;
-    //     h_oldnew_angles.data[m_oldnew_value(i, type)].y = angl;
-    //     h_ref_angles.data[i] = angl;
-    //     h_angles.data[i] = 0;
-    //
-    //     }
+    ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
+
+    ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
+    ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
+
+
+    // get a local copy of the simulation box too
+    const BoxDim& box = m_pdata->getBox();
+
+    for (unsigned int i = 0; i < m_num_angles; i++)
+        {
+
+        // const ImproperData::members_t& dihedral = m_dihedral_data->getMembersByIndex(i);
+        // assert(dihedral.tag[0] <= m_pdata->getMaximumTag());
+        // assert(dihedral.tag[1] <= m_pdata->getMaximumTag());
+        // assert(dihedral.tag[2] <= m_pdata->getMaximumTag());
+        // assert(dihedral.tag[3] <= m_pdata->getMaximumTag());
+
+        // transform a, b, and c into indices into the particle data arrays
+        // MEM TRANSFER: 6 ints
+        // unsigned int idx_a = h_rtag.data[dihedral.tag[0]];
+        // unsigned int idx_b = h_rtag.data[dihedral.tag[1]];
+        // unsigned int idx_c = h_rtag.data[dihedral.tag[2]];
+        // unsigned int idx_d = h_rtag.data[dihedral.tag[3]];
+        // unsigned int idp = m_group1->getMemberIndex(i);
+        // unsigned int idn = m_group2->getMemberIndex(i);
+        unsigned int tagp = m_group1->getMemberTag(i);
+        unsigned int tagn = m_group2->getMemberTag(i);
+        unsigned int tagpside = m_group3->getMemberTag(i);
+        unsigned int tagnside = m_group4->getMemberTag(i);
+        unsigned int rtagp = h_rtag.data[tagp];
+        unsigned int rtagn = h_rtag.data[tagn];
+        unsigned int rtagpside = h_rtag.data[tagpside];
+        unsigned int rtagnside = h_rtag.data[tagnside];
+        unsigned int dihedral_type = m_dihedral_data->getTypeByIndex(i);
+
+        // assert(idx_a < m_pdata->getN() + m_pdata->getNGhosts());
+        // assert(idx_b < m_pdata->getN() + m_pdata->getNGhosts());
+        // assert(idx_c < m_pdata->getN() + m_pdata->getNGhosts());
+        // assert(idx_d < m_pdata->getN() + m_pdata->getNGhosts());
+
+        // calculate d\vec{r}
+        Scalar3 dab;
+        dab.x = h_pos.data[rtagpside].x - h_pos.data[rtagp].x;
+        dab.y = h_pos.data[rtagpside].y - h_pos.data[rtagp].y;
+        dab.z = h_pos.data[rtagpside].z - h_pos.data[rtagp].z;
+
+
+        Scalar3 ddc;
+        ddc.x = h_pos.data[rtagnside].x - h_pos.data[rtagn].x;
+        ddc.y = h_pos.data[rtagnside].y - h_pos.data[rtagn].y;
+        ddc.z = h_pos.data[rtagnside].z - h_pos.data[rtagn].z;
+
+        dab = box.minImage(dab);
+        ddc = box.minImage(ddc);
+        //####################################################################################################
+        Scalar angl;
+        angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
+        h_oldnew_angles.data[m_oldnew_value(i, type)].x = angl;
+        h_oldnew_angles.data[m_oldnew_value(i, type)].y = angl;
+        h_ref_angles.data[i] = angl;
+        h_angles.data[i] = 0;
+
+        }
 
 
     }
