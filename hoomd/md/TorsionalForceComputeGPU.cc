@@ -48,7 +48,7 @@ TorsionalForceComputeGPU::TorsionalForceComputeGPU(
     Index2D oldnew_value((unsigned int)m_oldnew_angles.getPitch(),
                         (unsigned int)m_dihedral_data->getNTypes());
     m_oldnew_value = oldnew_value;
-    
+
     unsigned int warp_size = m_exec_conf->dev_prop.warpSize;
     m_tuner.reset(new Autotuner(warp_size,
                                 1024,
@@ -205,9 +205,20 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     assert(d_index_array2.data != NULL);
     assert(d_index_array3.data != NULL);
     assert(d_index_array4.data != NULL);
-
+    ArrayHandle<unsigned int> h_index_array1(m_group1->getIndexArray(),access_location::host,access_mode::read);
+    ArrayHandle<unsigned int> h_index_array2(m_group2->getIndexArray(),access_location::host,access_mode::read);
+    ArrayHandle<unsigned int> h_index_array3(m_group3->getIndexArray(),access_location::host,access_mode::read);
+    ArrayHandle<unsigned int> h_index_array4(m_group4->getIndexArray(),access_location::host,access_mode::read);
 
     unsigned int group_size = m_group1->getNumMembers();
+    if(timestep==3)
+    {
+    exit();
+    }
+    for(int k=0;k<group_size;k=k+1)
+    {
+    printf("%u %u %u %u",h_index_array1.data[k],h_index_array2.data[k],h_index_array3.data[k],h_index_array4.data[k]);
+    }
     unsigned int N = m_pdata->getN();
     // run the kernel in parallel on all GPUs
     this->m_tuner->begin();
