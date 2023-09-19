@@ -144,10 +144,26 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     ref_angl=0;
 
     tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
-    tmpangl = gpu_anglDiff(tmpangl);
+    //tmpangl = gpu_anglDiff(tmpangl);
+    if (tmpangl > M_PI)
+        {
+        tmpangl -= 2 * M_PI;
+        }
+    else if (tmpangl <= -M_PI)
+        {
+        tmpangl += 2 * M_PI;
+        }
     oldangl = d_oldnew_angles[d_oldnew_value(group_idx, typval)].x;
     diffangl = tmpangl - oldangl;
-    diffangl = gpu_anglDiff(diffangl);
+    //diffangl = gpu_anglDiff(diffangl);
+    if (diffangl > M_PI)
+        {
+        diffangl -= 2 * M_PI;
+        }
+    else if (diffangl <= -M_PI)
+        {
+        diffangl += 2 * M_PI;
+        }
     d_oldnew_angles[d_oldnew_value(group_idx, typval)].y = tmpangl;
     angl = d_angles[group_idx]+diffangl;
     //printf("%d %f \n",i,angl);
