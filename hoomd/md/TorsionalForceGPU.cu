@@ -172,27 +172,27 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     // tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
     tmpangl = atan2(dab1.y, dab1.x) - atan2(ddc1.y, ddc1.x);
 
-    //tmpangl = gpu_anglDiff(tmpangl);
-    if (tmpangl > M_PI)
-        {
-        tmpangl -= 2 * M_PI;
-        }
-    else if (tmpangl <= -M_PI)
-        {
-        tmpangl += 2 * M_PI;
-        }
+    tmpangl = gpu_anglDiff(tmpangl);
+    // if (tmpangl > M_PI)
+    //     {
+    //     tmpangl -= 2 * M_PI;
+    //     }
+    // else if (tmpangl <= -M_PI)
+    //     {
+    //     tmpangl += 2 * M_PI;
+    //     }
     Scalar2 TMPoldnew_angles = __ldg(d_oldnew_angles+d_oldnew_value(group_idx, typval));
     oldangl = TMPoldnew_angles.x;
     diffangl = tmpangl - oldangl;
-    //diffangl = gpu_anglDiff(diffangl);
-    if (diffangl > M_PI)
-        {
-        diffangl -= 2 * M_PI;
-        }
-    else if (diffangl <= -M_PI)
-        {
-        diffangl += 2 * M_PI;
-        }
+    diffangl = gpu_anglDiff(diffangl);
+    // if (diffangl > M_PI)
+    //     {
+    //     diffangl -= 2 * M_PI;
+    //     }
+    // else if (diffangl <= -M_PI)
+    //     {
+    //     diffangl += 2 * M_PI;
+    //     }
     //d_oldnew_angles[d_oldnew_value(group_idx, typval)].y = tmpangl;
     TMPoldnew_angles.y = tmpangl;
     d_TMP_angles = d_angles[group_idx];
@@ -211,14 +211,14 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
 
     Scalar distone1 =  sqrt(dab1.x*dab1.x + dab1.y*dab1.y + dab1.z*dab1.z);
     Scalar disttwo1 =  sqrt(ddc1.x*ddc1.x + ddc1.y*ddc1.y + ddc1.z*ddc1.z);
-    if(group_idx==50)
-      {
-      //printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
-      // printf("GPU %lu %u %u %u %u %u %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,distone,disttwo);
-      printf("GPU %lu %u %u %u %u %u %f %f\n",timestep,group_idx,rtagp,rtagn,rtagpside,rtagnside,distone1,disttwo1);
-
-
-      }
+    // if(group_idx==50)
+    //   {
+    //   //printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
+    //   // printf("GPU %lu %u %u %u %u %u %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,distone,disttwo);
+    //   printf("GPU %lu %u %u %u %u %u %f %f\n",timestep,group_idx,rtagp,rtagn,rtagpside,rtagnside,distone1,disttwo1);
+    //
+    //
+    //   }
     if ((angl> M_PI)&&(angl<3*M_PI/2))
       {
       ss = slow::sin(angl- M_PI);
