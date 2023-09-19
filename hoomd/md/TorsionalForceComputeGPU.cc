@@ -180,6 +180,8 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
 
     // the dihedral table is up to date: we are good to go. Call the kernel
     ArrayHandle<Scalar4> d_pos(m_pdata->getPositions(), access_location::device, access_mode::read);
+    ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
+
     BoxDim box = m_pdata->getGlobalBox();
 
     //ArrayHandle<Scalar4> d_force(m_force, access_location::device, access_mode::overwrite);
@@ -217,7 +219,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<unsigned int> h_index_array4(m_group4->getIndexArray(),access_location::host,access_mode::read);
 
     unsigned int group_size = m_group1->getNumMembers();
-    if(timestep==4)
+    if(timestep==100)
     {
     exit(0);
     }
@@ -225,8 +227,48 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     {
       if(k==0)
         {
-        printf("CPU %u %u %u %u %u %u \n",timestep,k,h_index_array1.data[k],h_index_array2.data[k],h_index_array3.data[k],h_index_array4.data[k]);
-        printf("CPU %u %u %u %u %u %u \n",timestep,k,h_rtag.data[h_index_array1.data[k]],h_rtag.data[h_index_array2.data[k]],h_rtag.data[h_index_array3.data[k]],h_rtag.data[h_index_array4.data[k]]);
+        unsigned int rtagp = h_rtag.data[h_index_array1.data[k]];
+        unsigned int rtagn = h_rtag.data[h_index_array2.data[k]];
+        unsigned int rtagpside = h_rtag.data[h_index_array3.data[k]];
+        unsigned int rtagnside = h_rtag.data[h_index_array4.data[k]];
+        unsigned int tagp = h_index_array1.data[k];
+        unsigned int tagn = h_index_array2.data[k];
+        unsigned int tagpside = h_index_array3.data[k];
+        unsigned int tagnside = h_index_array4.data[k];
+        Scalar3 dab1,dab;
+        dab1.x = h_pos.data[rtagpside].x - h_pos.data[rtagp].x;
+        dab1.y = h_pos.data[rtagpside].y - h_pos.data[rtagp].y;
+        dab1.z = h_pos.data[rtagpside].z - h_pos.data[rtagp].z;
+
+        dab.x = h_pos.data[tagpside].x - h_pos.data[tagp].x;
+        dab.y = h_pos.data[tagpside].y - h_pos.data[tagp].y;
+        dab.z = h_pos.data[tagpside].z - h_pos.data[tagp].z;
+
+
+
+        Scalar3 ddc1,ddc;
+        ddc1.x = h_pos.data[rtagnside].x - h_pos.data[rtagn].x;
+        ddc1.y = h_pos.data[rtagnside].y - h_pos.data[rtagn].y;
+        ddc1.z = h_pos.data[rtagnside].z - h_pos.data[rtagn].z;
+
+        ddc.x = h_pos.data[tagnside].x - h_pos.data[tagn].x;
+        ddc.y = h_pos.data[tagnside].y - h_pos.data[tagn].y;
+        ddc.z = h_pos.data[tagnside].z - h_pos.data[tagn].z;
+
+        dab1 = box.minImage(dab1);
+        ddc1 = box.minImage(ddc1);
+
+        dab = box.minImage(dab);
+        ddc = box.minImage(ddc);
+
+        Scalar distone = sqrt(dab.x*dab.x + dab.y*dab.y + dab.z*dab.z);
+        Scalar disttwo = sqrt(ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z);
+
+        Scalar distone1 = sqrt(dab1.x*dab1.x + dab1.y*dab1.y + dab1.z*dab1.z);
+        Scalar disttwo1 = sqrt(ddc1.x*ddc1.x + ddc1.y*ddc1.y + ddc1.z*ddc1.z);
+
+        printf("CPU %u %u %u %u %u %u %f %f \n",timestep,k,tagp,tagn,tagpside,tagnside,distone,disttwo);
+        printf("CPU %u %u %u %u %u %u %f %f\n",timestep,k,rtagp,rtagn,rtagpside,rtagnside,distone1,disttwo1);
 
         }
     }

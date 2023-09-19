@@ -99,6 +99,11 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar4 pos_a = __ldg(d_pos + tagpside);
     Scalar4 pos_d = __ldg(d_pos + tagnside);
 
+    Scalar4 pos_b1 = __ldg(d_pos + rtagp);
+    Scalar4 pos_c1 = __ldg(d_pos + rtagn);
+    Scalar4 pos_a1 = __ldg(d_pos + rtagpside);
+    Scalar4 pos_d1 = __ldg(d_pos + rtagnside);
+
     // Scalar4 pos_b = d_pos[tagp];
     // Scalar4 pos_c = d_pos[tagn];
     // Scalar4 pos_a = d_pos[tagpside];
@@ -109,26 +114,41 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar3 c_poss = make_scalar3(pos_c.x,pos_c.y,pos_c.z);
     Scalar3 d_poss = make_scalar3(pos_d.x,pos_d.y,pos_d.z);
 
+    Scalar3 a_poss1 = make_scalar3(pos_a1.x,pos_a1.y,pos_a1.z);
+    Scalar3 b_poss1 = make_scalar3(pos_b1.x,pos_b1.y,pos_b1.z);
+    Scalar3 c_poss1 = make_scalar3(pos_c1.x,pos_c1.y,pos_c1.z);
+    Scalar3 d_poss1 = make_scalar3(pos_d1.x,pos_d1.y,pos_d1.z);
 
-    Scalar3 dab;
+
+
+    Scalar3 dab,dab1;
     dab = a_poss - b_poss;
+    dab1 = a_poss1 - b_poss1;
+
 
 
     // dab.x = pos_a.x - pos_b.x;
     // dab.y = pos_a.y - pos_b.y;
     // dab.z = pos_a.z - pos_b.z;
 
-    Scalar3 ddc;
+    Scalar3 ddc,ddc1;
     // ddc.x = pos_d.x - pos_c.x;
     // ddc.y = pos_d.y - pos_c.y;
     // ddc.z = pos_d.z - pos_c.z;
 
     ddc = d_poss - c_poss;
+    ddc1 = d_poss1 - c_poss1;
+
 
 
     dab = box.minImage(dab);
 
     ddc = box.minImage(ddc);
+
+    dab1 = box.minImage(dab1);
+
+    ddc1 = box.minImage(ddc1);
+
 
     //####################################################################################################
     Scalar angl;
@@ -178,11 +198,14 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     // Scalar disttwo = sqrt(ddc.x*ddc.x+ddc.y*ddc.y+ddc.z*ddc.z);
     Scalar distone =  slow::rsqrt(dot(dab, dab));
     Scalar disttwo =  slow::rsqrt(dot(ddc, ddc));
+
+    Scalar distone1 =  slow::rsqrt(dot(dab1, dab1));
+    Scalar disttwo1 =  slow::rsqrt(dot(ddc1, ddc1));
     if(group_idx==0)
       {
       //printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
-      printf("GPU %lu %u %u %u %u %u \n",timestep,group_idx,tagp,tagn,tagpside,tagnside);
-      printf("GPU %lu %u %u %u %u %u \n",timestep,group_idx,rtagp,rtagn,rtagpside,rtagnside);
+      printf("GPU %lu %u %u %u %u %u %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,distone,disttwo);
+      printf("GPU %lu %u %u %u %u %u %f %f\n",timestep,group_idx,rtagp,rtagn,rtagpside,rtagnside,distone1,disttwo1);
 
 
       }
