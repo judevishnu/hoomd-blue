@@ -24,6 +24,7 @@ namespace kernel
 hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const BoxDim& box,
                                                 const Scalar4* d_pos,
                                                 Scalar4* d_torque,
+                                                unsigned int* rtag,
                                                 unsigned int* d_index_array1,
                                                 unsigned int* d_index_array2,
                                                 unsigned int* d_index_array3,

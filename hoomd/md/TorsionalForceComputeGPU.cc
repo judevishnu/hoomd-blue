@@ -173,6 +173,9 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<typeval_t> d_group_typeval(m_dihedral_data->getTypeValArray(),
                                            access_location::device,
                                            access_mode::read);
+
+    ArrayHandle<unsigned int> d_r_tag(m_pdata->getRTags(), access_location::device, access_mode::read);
+
     // the dihedral table is up to date: we are good to go. Call the kernel
     ArrayHandle<Scalar4> d_pos(m_pdata->getPositions(), access_location::device, access_mode::read);
     BoxDim box = m_pdata->getGlobalBox();
@@ -200,6 +203,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     assert(d_angles.data != NULL);
     assert(d_pos.data != NULL);
     assert(d_torque.data != NULL);
+    assert(d_r_tag.data != NULL);
 
     assert(d_index_array1.data != NULL);
     assert(d_index_array2.data != NULL);
@@ -211,7 +215,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<unsigned int> h_index_array4(m_group4->getIndexArray(),access_location::host,access_mode::read);
 
     unsigned int group_size = m_group1->getNumMembers();
-    if(timestep==3)
+    if(timestep==4)
     {
     exit(0);
     }
@@ -226,6 +230,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     // run the kernel in parallel on all GPUs
     this->m_tuner->begin();
     kernel::gpu_compute_torsional_sin_forces(group_size,box,d_pos.data,d_torque.data,
+                                                 d_r_tag.data,
                                                  d_index_array1.data,
                                                  d_index_array2.data,
                                                  d_index_array3.data,
