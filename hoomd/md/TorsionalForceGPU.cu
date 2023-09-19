@@ -259,9 +259,9 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                                                 // const unsigned int pitch,
                                                 // const unsigned int* n_dihedrals_list,
                                                 Scalar4* d_params,
-                                                unsigned int timestep,
+                                                long unsigned int timestep,
                                                 // unsigned int n_dihedral_types,
-                                                long unsigned int block_size)
+                                                unsigned int block_size)
                                                 //,int warp_size)
     {
     assert(d_params);
