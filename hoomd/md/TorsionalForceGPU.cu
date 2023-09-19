@@ -159,6 +159,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar3 torqp;
     Scalar3 torqn;
     Scalar3 constT;
+    Scalar d_TMP_angles;
     torqp = make_scalar3(0,0,0);
     torqn = make_scalar3(0,0,0);
     tmpangl = 0;
@@ -176,7 +177,8 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
         {
         tmpangl += 2 * M_PI;
         }
-    oldangl = d_oldnew_angles[d_oldnew_value(group_idx, typval)].x;
+    Scalar2 TMPoldnew_angles = d_oldnew_angles[d_oldnew_value(group_idx, typval)];
+    oldangl = TMPoldnew_angles.x;
     diffangl = tmpangl - oldangl;
     //diffangl = gpu_anglDiff(diffangl);
     if (diffangl > M_PI)
@@ -187,13 +189,17 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
         {
         diffangl += 2 * M_PI;
         }
-    d_oldnew_angles[d_oldnew_value(group_idx, typval)].y = tmpangl;
-    angl = d_angles[group_idx]+diffangl;
+    //d_oldnew_angles[d_oldnew_value(group_idx, typval)].y = tmpangl;
+    TMPoldnew_angles.y = tmpangl;
+    d_TMP_angles = d_angles[group_idx];
+    angl = d_TMP_angles+diffangl;
     //printf("%d %f \n",i,angl);
     d_angles[group_idx] = angl;
     Scalar cs = slow::cos(angl);
     Scalar ss = slow::sin(angl);
-    d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
+    //d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
+    TMPoldnew_angles.x = tmpangl;
+    d_oldnew_angles[d_oldnew_value(group_idx, typval)] = TMPoldnew_angles;
     // Scalar distone = sqrt(dab.x*dab.x+dab.y*dab.y+dab.z*dab.z);
     // Scalar disttwo = sqrt(ddc.x*ddc.x+ddc.y*ddc.y+ddc.z*ddc.z);
     Scalar distone =  sqrt(dab.x*dab.x + dab.y*dab.y + dab.z*dab.z);
@@ -201,7 +207,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
 
     Scalar distone1 =  sqrt(dab1.x*dab1.x + dab1.y*dab1.y + dab1.z*dab1.z);
     Scalar disttwo1 =  sqrt(ddc1.x*ddc1.x + ddc1.y*ddc1.y + ddc1.z*ddc1.z);
-    if(group_idx==0)
+    if(group_idx==512-5)
       {
       //printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
       printf("GPU %lu %u %u %u %u %u %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,distone,disttwo);
