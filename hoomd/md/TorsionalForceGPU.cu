@@ -173,7 +173,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
     // if (group_idx==0)
     //   {
-    printf("%u %u %u %u %u %f %f %f \n",timestep,tagp,tagn,tagpside,tagnside,diffangl,oldangl,angl);
+    printf("%u %u %u %u %u %f %f %f %f \n",timestep,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl);
       // }
     if ((angl> M_PI)&&(angl<3*M_PI/2))
       {
