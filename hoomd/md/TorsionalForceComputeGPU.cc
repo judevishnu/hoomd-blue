@@ -223,7 +223,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     {
     exit(0);
     }
-    for(int k=0;k<group_size;k=k+1)
+    for(unsigned int k=0;k<group_size;k=k+1)
     {
       if(k==0)
         {
@@ -267,8 +267,8 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
         Scalar distone1 = sqrt(dab1.x*dab1.x + dab1.y*dab1.y + dab1.z*dab1.z);
         Scalar disttwo1 = sqrt(ddc1.x*ddc1.x + ddc1.y*ddc1.y + ddc1.z*ddc1.z);
 
-        printf("CPU %u %u %u %u %u %u %f %f \n",timestep,k,tagp,tagn,tagpside,tagnside,distone,disttwo);
-        printf("CPU %u %u %u %u %u %u %f %f\n",timestep,k,rtagp,rtagn,rtagpside,rtagnside,distone1,disttwo1);
+        printf("CPU %lu %u %u %u %u %u %f %f \n",timestep,k,tagp,tagn,tagpside,tagnside,distone,disttwo);
+        printf("CPU %lu %u %u %u %u %u %f %f\n",timestep,k,rtagp,rtagn,rtagpside,rtagnside,distone1,disttwo1);
 
         }
     }
