@@ -94,15 +94,15 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     unsigned int rtagnside = rtag[tagnside];
 
 
-    Scalar4 pos_b = __ldg(d_pos + tagp);
-    Scalar4 pos_c = __ldg(d_pos + tagn);
-    Scalar4 pos_a = __ldg(d_pos + tagpside);
-    Scalar4 pos_d = __ldg(d_pos + tagnside);
+    Scalar4 pos_b = d_pos[tagp];//__ldg(d_pos + tagp);
+    Scalar4 pos_c = d_pos[tagn];
+    Scalar4 pos_a = d_pos[tagpside];
+    Scalar4 pos_d = d_pos[tagnside];
 
-    Scalar4 pos_b1 = __ldg(d_pos + rtagp);
-    Scalar4 pos_c1 = __ldg(d_pos + rtagn);
-    Scalar4 pos_a1 = __ldg(d_pos + rtagpside);
-    Scalar4 pos_d1 = __ldg(d_pos + rtagnside);
+    Scalar4 pos_b1 = d_pos[rtagp];
+    Scalar4 pos_c1 = d_pos[rtagn];
+    Scalar4 pos_a1 = d_pos[rtagpside];
+    Scalar4 pos_d1 = d_pos[rtagnside];
 
     // Scalar4 pos_b = d_pos[tagp];
     // Scalar4 pos_c = d_pos[tagn];
@@ -196,11 +196,11 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
     // Scalar distone = sqrt(dab.x*dab.x+dab.y*dab.y+dab.z*dab.z);
     // Scalar disttwo = sqrt(ddc.x*ddc.x+ddc.y*ddc.y+ddc.z*ddc.z);
-    Scalar distone =  slow::rsqrt(dot(dab, dab));
-    Scalar disttwo =  slow::rsqrt(dot(ddc, ddc));
+    Scalar distone =  sqrt(dab.x*dab.x + dab.y*dab.y + dab.z*dab.z);
+    Scalar disttwo =  sqrt(ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z);
 
-    Scalar distone1 =  slow::rsqrt(dot(dab1, dab1));
-    Scalar disttwo1 =  slow::rsqrt(dot(ddc1, ddc1));
+    Scalar distone1 =  sqrt(dab1.x*dab1.x + dab1.y*dab1.y + dab1.z*dab1.z);
+    Scalar disttwo1 =  sqrt(ddc1.x*ddc1.x + ddc1.y*ddc1.y + ddc1.z*ddc1.z);
     if(group_idx==0)
       {
       //printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
