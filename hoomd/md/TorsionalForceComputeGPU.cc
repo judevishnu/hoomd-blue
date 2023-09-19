@@ -176,6 +176,13 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
 
     ArrayHandle<unsigned int> d_r_tag(m_pdata->getRTags(), access_location::device, access_mode::read);
     ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
+    //ArrayHandle<unsigned int> d_tags(m_group4->getTags(),access_location::device,access_mode::read);
+    ArrayHandle<unsigned int> h_rtags1(m_group1->getRTags(),access_location::host,access_mode::read);
+    ArrayHandle<unsigned int> h_rtags2(m_group2->getRTags(),access_location::host,access_mode::read);
+    ArrayHandle<unsigned int> h_rtags3(m_group3->getRTags(),access_location::host,access_mode::read);
+    ArrayHandle<unsigned int> h_rtags4(m_group4->getRTags(),access_location::host,access_mode::read);
+
+
 
 
     // the dihedral table is up to date: we are good to go. Call the kernel
@@ -225,12 +232,17 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     // }
     for(unsigned int k=0;k<group_size;k=k+1)
     {
+      unsigned int rtag1 = h_rtags1.data[k];
+      unsigned int rtag2 = h_rtags2.data[k];
+      unsigned int rtag3 = h_rtags3.data[k];
+      unsigned int rtag4 = h_rtags4.data[k];
+
       if(k==50)
         {
-        unsigned int rtagp = h_rtag.data[h_index_array1.data[k]];
-        unsigned int rtagn = h_rtag.data[h_index_array2.data[k]];
-        unsigned int rtagpside = h_rtag.data[h_index_array3.data[k]];
-        unsigned int rtagnside = h_rtag.data[h_index_array4.data[k]];
+        unsigned int rtagp = h_rtag.data[h_index_array1.data[rtag1]];
+        unsigned int rtagn = h_rtag.data[h_index_array2.data[rtag2]];
+        unsigned int rtagpside = h_rtag.data[h_index_array3.data[rtag3]];
+        unsigned int rtagnside = h_rtag.data[h_index_array4.data[rtag4]];
         unsigned int tagp = h_index_array1.data[k];
         unsigned int tagn = h_index_array2.data[k];
         unsigned int tagpside = h_index_array3.data[k];
