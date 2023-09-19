@@ -88,10 +88,10 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     unsigned int tagn = d_index_array2[group_idx];
     unsigned int tagpside = d_index_array3[group_idx];
     unsigned int tagnside = d_index_array4[group_idx];
-    unsigned int rtagp = d_r_tag[tagp];
-    unsigned int rtagn = r_tag[tagn];
-    unsigned int rtagpside = d_r_tag[tagpside];
-    unsigned int rtagnside = d_r_tag[tagnside];
+    unsigned int rtagp = rtag[tagp];
+    unsigned int rtagn = rtag[tagn];
+    unsigned int rtagpside = rtag[tagpside];
+    unsigned int rtagnside = rtag[tagnside];
 
 
     Scalar4 pos_b = __ldg(d_pos + tagp);
