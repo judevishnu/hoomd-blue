@@ -132,12 +132,8 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar3 torqp;
     Scalar3 torqn;
     Scalar3 constT;
-    torqp.x = 0.0;
-    torqp.y = 0.0;
-    torqp.z = 0.0;
-    torqn.x = 0.0;
-    torqn.y = 0.0;
-    torqn.z = 0.0;
+    torqp = make_scalar3(0,0,0);
+    torqn = make_scalar3(0,0,0);
     tmpangl = 0;
     angl = 0;
     diffangl=0;
@@ -171,29 +167,26 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar cs = slow::cos(angl);
     Scalar ss = slow::sin(angl);
     d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
+    Scalar distone = sqrt(dab.x*dab.x+dab.y*dab.y+dab.z*dab.z);
+    Scalar disttwo = sqrt(ddc.x*ddc.x+ddc.y*ddc.y+ddc.z*ddc.z);
+
     // if (group_idx==0)
     //   {
-    printf("%u %u %u %u %u %f %f %f %f \n",timestep,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl);
+    printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
       // }
     if ((angl> M_PI)&&(angl<3*M_PI/2))
       {
       ss = slow::sin(angl- M_PI);
       cs = slow::cos(angl- M_PI);
-      torqp.x =  0.0 ;
-      torqp.y =  0.0 ;
-      torqp.z =  -2*K*cs*ss;
-      torqn.x =  0.0 ;
-      torqn.y =  0.0 ;
-      torqn.z =  2*K*cs*ss;
+      torqp = make_scalar3(0,0,-2*K*cs*ss);
+      torqn = make_scalar3(0,0,2*K*cs*ss);
       }
     else if (angl < 0)
       {
-      torqp.x =  0.0 ;
-      torqp.y =  0.0 ;
-      torqp.z =  -2*K*cs*ss;
-      torqn.x =  0.0 ;
-      torqn.y =  0.0 ;
-      torqn.z =  2*K*cs*ss;
+      Scalar cs = slow::cos(angl);
+      Scalar ss = slow::sin(angl);
+      torqp = make_scalar3(0,0,-2*K*cs*ss);
+      torqn = make_scalar3(0,0,2*K*cs*ss);
       }
     // else if (angl == 0)
     //   {
