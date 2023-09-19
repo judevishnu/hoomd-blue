@@ -252,6 +252,12 @@ class PYBIND11_EXPORT ParticleGroup
         return m_member_idx;
         }
 
+    const GlobalArray<unsigned int>& getMemberTagArray() const
+	{
+	checkRebuild();
+	return m_member_tags;
+	}		
+
 #ifdef ENABLE_HIP
     //! Return the load balancing GPU partition
     const GPUPartition& getGPUPartition() const
