@@ -123,6 +123,9 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     torqn.z = 0.0;
     tmpangl = 0;
     angl = 0;
+    diffangl=0;
+    ref_angl=0;
+
     tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
     tmpangl = gpu_anglDiff(tmpangl);
     oldangl = d_oldnew_angles[d_oldnew_value(group_idx, typval)].x;
@@ -140,38 +143,37 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     printf("%u %u %u %u %f \n",tagp,tagn,tagpside,tagnside,angl);
     }
     if ((angl> M_PI)&&(angl<3*M_PI/2))
-        {
-        ss = slow::sin(angl- M_PI);
-        cs = slow::cos(angl- M_PI);
-        torqp.x =  0.0 ;
-        torqp.y =  0.0 ;
-        torqp.z =  -2*K*cs*ss;
-        torqn.x =  0.0 ;
-        torqn.y =  0.0 ;
-        torqn.z =  2*K*cs*ss;
-        }
+    {
+    ss = slow::sin(angl- M_PI);
+    cs = slow::cos(angl- M_PI);
+    torqp.x =  0.0 ;
+    torqp.y =  0.0 ;
+    torqp.z =  -2*K*cs*ss;
+    torqn.x =  0.0 ;
+    torqn.y =  0.0 ;
+    torqn.z =  2*K*cs*ss;
+    }
     else if (angl < 0)
-        {
-        torqp.x =  0.0 ;
-        torqp.y =  0.0 ;
-        torqp.z =  -2*K*cs*ss;
-        torqn.x =  0.0 ;
-        torqn.y =  0.0 ;
-        torqn.z =  2*K*cs*ss;
-
-        }
+    {
+    torqp.x =  0.0 ;
+    torqp.y =  0.0 ;
+    torqp.z =  -2*K*cs*ss;
+    torqn.x =  0.0 ;
+    torqn.y =  0.0 ;
+    torqn.z =  2*K*cs*ss;
+    }
     else if (angl == 0)
-        {
-        if (timestep < 10)
-            {
-            torqp.x =  tqx;
-            torqp.y =  tqy;
-            torqp.z =  tqz;
-            torqn.x =  tqx;
-            torqn.y =  tqy;
-            torqn.z = -tqz;
-            }
-        }
+    {
+    if (timestep < 10)
+      {
+      torqp.x =  tqx;
+      torqp.y =  tqy;
+      torqp.z =  tqz;
+      torqn.x =  tqx;
+      torqn.y =  tqy;
+      torqn.z = -tqz;
+      }
+    }
     d_torque[tagp].x = torqp.x;
     d_torque[tagp].y = torqp.y;
     d_torque[tagp].z = torqp.z;
