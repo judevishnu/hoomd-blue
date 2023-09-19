@@ -175,6 +175,8 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
                                            access_mode::read);
 
     ArrayHandle<unsigned int> d_r_tag(m_pdata->getRTags(), access_location::device, access_mode::read);
+    ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
+
 
     // the dihedral table is up to date: we are good to go. Call the kernel
     ArrayHandle<Scalar4> d_pos(m_pdata->getPositions(), access_location::device, access_mode::read);
@@ -224,6 +226,8 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
       if(k==0)
         {
         printf("CPU %u %u %u %u %u %u \n",timestep,k,h_index_array1.data[k],h_index_array2.data[k],h_index_array3.data[k],h_index_array4.data[k]);
+        printf("CPU %u %u %u %u %u %u \n",timestep,k,h_rtag.data[h_index_array1.data[k]],h_rtag.data[h_index_array2.data[k]],h_rtag.data[h_index_array3.data[k]],h_rtag.data[h_index_array4.data[k]]);
+
         }
     }
     unsigned int N = m_pdata->getN();
