@@ -97,14 +97,14 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar4 pos_c = d_pos[tagn];
     Scalar4 pos_a = d_pos[tagpside];
     Scalar4 pos_d = d_pos[tagnside];
-    Scalar3 a_pos = make_scalar3(pos_a.x,pos_a.y,pos_a.z);
-    Scalar3 b_pos = make_scalar3(pos_b.x,pos_b.y,pos_b.z);
-    Scalar3 c_pos = make_scalar3(pos_c.x,pos_c.y,pos_c.z);
-    Scalar3 d_pos = make_scalar3(pos_d.x,pos_d.y,pos_d.z);
+    Scalar3 a_poss = make_scalar3(pos_a.x,pos_a.y,pos_a.z);
+    Scalar3 b_poss = make_scalar3(pos_b.x,pos_b.y,pos_b.z);
+    Scalar3 c_poss = make_scalar3(pos_c.x,pos_c.y,pos_c.z);
+    Scalar3 d_poss = make_scalar3(pos_d.x,pos_d.y,pos_d.z);
 
 
     Scalar3 dab;
-    dab = a_pos - b_pos;
+    dab = a_poss - b_poss;
 
 
     // dab.x = pos_a.x - pos_b.x;
@@ -116,7 +116,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     // ddc.y = pos_d.y - pos_c.y;
     // ddc.z = pos_d.z - pos_c.z;
 
-    ddc = d_pos - c_pos;
+    ddc = d_poss - c_poss;
 
 
     dab = box.minImage(dab);
