@@ -241,8 +241,8 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     //     torqn.z = -tqz;
     //     }
     //   }
-    d_torque[tagp] = make_scalar4(torqp.x,torqp.y,torqp.z,0);
-    d_torque[tagn] = make_scalar4(torqn.x,torqn.y,torqn.z,0);
+    d_torque[rtagp] = make_scalar4(torqp.x,torqp.y,torqp.z,0);
+    d_torque[rtagn] = make_scalar4(torqn.x,torqn.y,torqn.z,0);
     }
 
 /*! \param d_force Device memory to write computed forces

@@ -203,10 +203,15 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
 
     ArrayHandle<Scalar2> d_oldnew_angles(m_oldnew_angles, access_location::device, access_mode::readwrite);
 
-    ArrayHandle<unsigned int> d_index_array1(m_group1->getIndexArray(),access_location::device,access_mode::read);
-    ArrayHandle<unsigned int> d_index_array2(m_group2->getIndexArray(),access_location::device,access_mode::read);
-    ArrayHandle<unsigned int> d_index_array3(m_group3->getIndexArray(),access_location::device,access_mode::read);
-    ArrayHandle<unsigned int> d_index_array4(m_group4->getIndexArray(),access_location::device,access_mode::read);
+    // ArrayHandle<unsigned int> d_index_array1(m_group1->getIndexArray(),access_location::device,access_mode::read);
+    // ArrayHandle<unsigned int> d_index_array2(m_group2->getIndexArray(),access_location::device,access_mode::read);
+    // ArrayHandle<unsigned int> d_index_array3(m_group3->getIndexArray(),access_location::device,access_mode::read);
+    // ArrayHandle<unsigned int> d_index_array4(m_group4->getIndexArray(),access_location::device,access_mode::read);
+
+    ArrayHandle<unsigned int> d_index_array1(m_group1->getMemberTagArray(),access_location::device,access_mode::read);
+    ArrayHandle<unsigned int> d_index_array2(m_group2->getMemberTagArray(),access_location::device,access_mode::read);
+    ArrayHandle<unsigned int> d_index_array3(m_group3->getMemberTagArray(),access_location::device,access_mode::read);
+    ArrayHandle<unsigned int> d_index_array4(m_group4->getMemberTagArray(),access_location::device,access_mode::read);
 
     //sanity check
     assert(d_ref_angles.data != NULL);
@@ -224,6 +229,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<unsigned int> h_index_array2(m_group2->getIndexArray(),access_location::host,access_mode::read);
     ArrayHandle<unsigned int> h_index_array3(m_group3->getIndexArray(),access_location::host,access_mode::read);
     ArrayHandle<unsigned int> h_index_array4(m_group4->getIndexArray(),access_location::host,access_mode::read);
+
 
     unsigned int group_size = m_group1->getNumMembers();
     // if(timestep==100)
