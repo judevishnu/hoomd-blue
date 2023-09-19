@@ -213,7 +213,7 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     unsigned int group_size = m_group1->getNumMembers();
     if(timestep==3)
     {
-    exit();
+    exit(0);
     }
     for(int k=0;k<group_size;k=k+1)
     {
