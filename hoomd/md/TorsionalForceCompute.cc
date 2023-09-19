@@ -487,7 +487,6 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
             torqn.x =  0.0 ;
             torqn.y =  0.0 ;
             torqn.z =  2*m_K[dihedral_type]*cs*ss;
-
             }
         else if (angl == 0)
             {
