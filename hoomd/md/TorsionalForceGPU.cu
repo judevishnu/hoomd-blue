@@ -69,7 +69,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
                                                        const Index2D d_oldnew_value,
                                                        const typeval_union* d_group_typeval,
                                                        const Scalar4* d_params,
-                                                       unsigned int timestep)
+                                                       long unsigned int timestep)
     {
     unsigned int group_idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (group_idx >= group_size)
@@ -88,10 +88,10 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     unsigned int tagn = d_index_array2[group_idx];
     unsigned int tagpside = d_index_array3[group_idx];
     unsigned int tagnside = d_index_array4[group_idx];
-    unsigned int rtagp = r_tag[tagp];
+    unsigned int rtagp = d_r_tag[tagp];
     unsigned int rtagn = r_tag[tagn];
-    unsigned int rtagpside = r_tag[tagpside];
-    unsigned int rtagnside = r_tag[tagnside];
+    unsigned int rtagpside = d_r_tag[tagpside];
+    unsigned int rtagnside = d_r_tag[tagnside];
 
 
     Scalar4 pos_b = __ldg(d_pos + tagp);
@@ -181,8 +181,8 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     if(group_idx==0)
       {
       //printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
-      printf("GPU %u %u %u %u %u %u \n",timestep,group_idx,tagp,tagn,tagpside,tagnside);
-      printf("GPU %u %u %u %u %u %u \n",timestep,group_idx,rtagp,rtagn,rtagpside,rtagnside);
+      printf("GPU %lu %u %u %u %u %u \n",timestep,group_idx,tagp,tagn,tagpside,tagnside);
+      printf("GPU %lu %u %u %u %u %u \n",timestep,group_idx,rtagp,rtagn,rtagpside,rtagnside);
 
 
       }
@@ -261,7 +261,7 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                                                 Scalar4* d_params,
                                                 unsigned int timestep,
                                                 // unsigned int n_dihedral_types,
-                                                unsigned int block_size)
+                                                long unsigned int block_size)
                                                 //,int warp_size)
     {
     assert(d_params);
