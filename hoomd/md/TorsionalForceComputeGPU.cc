@@ -217,7 +217,10 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     }
     for(int k=0;k<group_size;k=k+1)
     {
-    printf("%u %u %u %u",h_index_array1.data[k],h_index_array2.data[k],h_index_array3.data[k],h_index_array4.data[k]);
+      if(k==0)
+        {
+        printf("%u %u %u %u",h_index_array1.data[k],h_index_array2.data[k],h_index_array3.data[k],h_index_array4.data[k]);
+        }
     }
     unsigned int N = m_pdata->getN();
     // run the kernel in parallel on all GPUs
