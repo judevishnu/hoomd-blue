@@ -88,10 +88,16 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     unsigned int tagpside = d_index_array3[group_idx];
     unsigned int tagnside = d_index_array4[group_idx];
 
-    Scalar4 pos_b = __ldg(d_pos + tagp);
-    Scalar4 pos_c = __ldg(d_pos + tagn);
-    Scalar4 pos_a = __ldg(d_pos + tagpside);
-    Scalar4 pos_d = __ldg(d_pos + tagnside);
+    // Scalar4 pos_b = __ldg(d_pos + tagp);
+    // Scalar4 pos_c = __ldg(d_pos + tagn);
+    // Scalar4 pos_a = __ldg(d_pos + tagpside);
+    // Scalar4 pos_d = __ldg(d_pos + tagnside);
+
+    Scalar4 pos_b = d_pos[tagp];
+    Scalar4 pos_c = d_pos[tagn];
+    Scalar4 pos_a = d_pos[tagpside];
+    Scalar4 pos_d = d_pos[tagnside];
+
     Scalar3 dab;
     dab.x = pos_a.x - pos_b.x;
     dab.y = pos_a.y - pos_b.y;
@@ -140,7 +146,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
     if (group_idx==0)
     {
-    printf("%u %u %u %u %f \n",tagp,tagn,tagpside,tagnside,angl);
+    printf("%u %u %u %u %u %f \n",timestep,tagp,tagn,tagpside,tagnside,angl);
     }
     if ((angl> M_PI)&&(angl<3*M_PI/2))
     {
