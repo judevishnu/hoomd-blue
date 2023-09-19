@@ -88,15 +88,16 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     unsigned int tagpside = d_index_array3[group_idx];
     unsigned int tagnside = d_index_array4[group_idx];
 
-    // Scalar4 pos_b = __ldg(d_pos + tagp);
-    // Scalar4 pos_c = __ldg(d_pos + tagn);
-    // Scalar4 pos_a = __ldg(d_pos + tagpside);
-    // Scalar4 pos_d = __ldg(d_pos + tagnside);
+    Scalar4 pos_b = __ldg(d_pos + tagp);
+    Scalar4 pos_c = __ldg(d_pos + tagn);
+    Scalar4 pos_a = __ldg(d_pos + tagpside);
+    Scalar4 pos_d = __ldg(d_pos + tagnside);
 
-    Scalar4 pos_b = d_pos[tagp];
-    Scalar4 pos_c = d_pos[tagn];
-    Scalar4 pos_a = d_pos[tagpside];
-    Scalar4 pos_d = d_pos[tagnside];
+    // Scalar4 pos_b = d_pos[tagp];
+    // Scalar4 pos_c = d_pos[tagn];
+    // Scalar4 pos_a = d_pos[tagpside];
+    // Scalar4 pos_d = d_pos[tagnside];
+
     Scalar3 a_poss = make_scalar3(pos_a.x,pos_a.y,pos_a.z);
     Scalar3 b_poss = make_scalar3(pos_b.x,pos_b.y,pos_b.z);
     Scalar3 c_poss = make_scalar3(pos_c.x,pos_c.y,pos_c.z);
