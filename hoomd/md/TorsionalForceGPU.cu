@@ -167,9 +167,10 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar cs = slow::cos(angl);
     Scalar ss = slow::sin(angl);
     d_oldnew_angles[d_oldnew_value(group_idx, typval)].x = tmpangl;
-    Scalar distone = sqrt(dab.x*dab.x+dab.y*dab.y+dab.z*dab.z);
-    Scalar disttwo = sqrt(ddc.x*ddc.x+ddc.y*ddc.y+ddc.z*ddc.z);
-
+    // Scalar distone = sqrt(dab.x*dab.x+dab.y*dab.y+dab.z*dab.z);
+    // Scalar disttwo = sqrt(ddc.x*ddc.x+ddc.y*ddc.y+ddc.z*ddc.z);
+    Scalar distone =  slow::rsqrt(dot(dab, dab));
+    Scalar disttwo =  slow::rsqrt(dot(ddc, ddc));
     // if (group_idx==0)
     //   {
     printf("%u %u %u %u %u %u %f %f %f %f %f %f\n",timestep,group_idx,tagp,tagn,tagpside,tagnside,diffangl,tmpangl,oldangl,angl,distone,disttwo);
