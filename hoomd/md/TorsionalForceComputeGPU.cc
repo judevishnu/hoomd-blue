@@ -148,19 +148,16 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
                                            access_location::device,
                                            access_mode::read);
 
-    ArrayHandle<unsigned int> d_r_tag(m_pdata->getRTags(), access_location::device, access_mode::read);
+    ArrayHandle<unsigned int> d_rtag(m_pdata->getRTags(), access_location::device, access_mode::read);
 
 
 
 
 
-    // the dihedral table is up to date: we are good to go. Call the kernel
     ArrayHandle<Scalar4> d_pos(m_pdata->getPositions(), access_location::device, access_mode::read);
-    // ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
 
     BoxDim box = m_pdata->getGlobalBox();
 
-    //ArrayHandle<Scalar4> d_force(m_force, access_location::device, access_mode::overwrite);
     ArrayHandle<Scalar4> d_torque(m_torque, access_location::device, access_mode::overwrite);
 
     //ArrayHandle<Scalar> d_virial(m_virial, access_location::device, access_mode::overwrite);
@@ -174,10 +171,10 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
 
 
 
-    ArrayHandle<unsigned int> d_index_array1(m_group1->getMemberTagArray(),access_location::device,access_mode::read);
-    ArrayHandle<unsigned int> d_index_array2(m_group2->getMemberTagArray(),access_location::device,access_mode::read);
-    ArrayHandle<unsigned int> d_index_array3(m_group3->getMemberTagArray(),access_location::device,access_mode::read);
-    ArrayHandle<unsigned int> d_index_array4(m_group4->getMemberTagArray(),access_location::device,access_mode::read);
+    ArrayHandle<unsigned int> d_tag_array1(m_group1->getMemberTagArray(),access_location::device,access_mode::read);
+    ArrayHandle<unsigned int> d_tag_array2(m_group2->getMemberTagArray(),access_location::device,access_mode::read);
+    ArrayHandle<unsigned int> d_tag_array3(m_group3->getMemberTagArray(),access_location::device,access_mode::read);
+    ArrayHandle<unsigned int> d_tag_array4(m_group4->getMemberTagArray(),access_location::device,access_mode::read);
 
     //sanity check
     assert(d_ref_angles.data != NULL);
@@ -185,12 +182,12 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     assert(d_angles.data != NULL);
     assert(d_pos.data != NULL);
     assert(d_torque.data != NULL);
-    assert(d_r_tag.data != NULL);
+    assert(d_rtag.data != NULL);
 
-    assert(d_index_array1.data != NULL);
-    assert(d_index_array2.data != NULL);
-    assert(d_index_array3.data != NULL);
-    assert(d_index_array4.data != NULL);
+    assert(d_tag_array1.data != NULL);
+    assert(d_tag_array2.data != NULL);
+    assert(d_tag_array3.data != NULL);
+    assert(d_tag_array4.data != NULL);
 
 
 
@@ -200,11 +197,11 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     // run the kernel in parallel on all GPUs
     this->m_tuner->begin();
     kernel::gpu_compute_torsional_sin_forces(group_size,box,d_pos.data,d_torque.data,
-                                                 d_r_tag.data,
-                                                 d_index_array1.data,
-                                                 d_index_array2.data,
-                                                 d_index_array3.data,
-                                                 d_index_array4.data,
+                                                 d_rtag.data,
+                                                 d_tag_array1.data,
+                                                 d_tag_array2.data,
+                                                 d_tag_array3.data,
+                                                 d_tag_array4.data,
                                                  d_ref_angles.data,
                                                  d_angles.data,
                                                  d_oldnew_angles.data,

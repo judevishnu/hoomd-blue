@@ -58,11 +58,11 @@ __device__ Scalar gpu_anglDiff(Scalar diff)
 __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_size,const BoxDim box,
                                                        const Scalar4* d_pos,
                                                        Scalar4* d_torque,
-                                                       unsigned int* rtag,
-                                                       unsigned int* d_index_array1,
-                                                       unsigned int* d_index_array2,
-                                                       unsigned int* d_index_array3,
-                                                       unsigned int* d_index_array4,
+                                                       unsigned int* d_rtag,
+                                                       unsigned int* d_tag_array1,
+                                                       unsigned int* d_tag_array2,
+                                                       unsigned int* d_tag_array3,
+                                                       unsigned int* d_tag_array4,
                                                        Scalar* d_ref_angles,
                                                        Scalar* d_angles,
                                                        Scalar2* d_oldnew_angles,
@@ -83,14 +83,14 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     Scalar tqy = params.z;
     Scalar tqz = params.w;
 
-    unsigned int tagp = d_index_array1[group_idx];
-    unsigned int tagn = d_index_array2[group_idx];
-    unsigned int tagpside = d_index_array3[group_idx];
-    unsigned int tagnside = d_index_array4[group_idx];
-    unsigned int rtagp = rtag[tagp];
-    unsigned int rtagn = rtag[tagn];
-    unsigned int rtagpside = rtag[tagpside];
-    unsigned int rtagnside = rtag[tagnside];
+    unsigned int tagp = d_tag_array1[group_idx];
+    unsigned int tagn = d_tag_array2[group_idx];
+    unsigned int tagpside = d_tag_array3[group_idx];
+    unsigned int tagnside = d_tag_array4[group_idx];
+    unsigned int rtagp = d_rtag[tagp];
+    unsigned int rtagn = d_rtag[tagn];
+    unsigned int rtagpside = d_rtag[tagpside];
+    unsigned int rtagnside = d_rtag[tagnside];
 
 
 
@@ -137,7 +137,6 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     diffangl=0;
     ref_angl=0;
 
-    // tmpangl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
     tmpangl = atan2(dab1.y, dab1.x) - atan2(ddc1.y, ddc1.x);
 
     tmpangl = gpu_anglDiff(tmpangl);
@@ -150,7 +149,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
     TMPoldnew_angles.y = tmpangl;
     d_TMP_angles = d_angles[group_idx];
     angl = d_TMP_angles+diffangl;
-    //printf("%d %f \n",i,angl);
+
     d_angles[group_idx] = angl;
     Scalar cs = slow::cos(angl);
     Scalar ss = slow::sin(angl);
@@ -216,11 +215,11 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
 hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const BoxDim& box,
                                                 const Scalar4* d_pos,
                                                 Scalar4* d_torque,
-                                                unsigned int* rtag,
-                                                unsigned int* d_index_array1,
-                                                unsigned int* d_index_array2,
-                                                unsigned int* d_index_array3,
-                                                unsigned int* d_index_array4,
+                                                unsigned int* d_rtag,
+                                                unsigned int* d_tag_array1,
+                                                unsigned int* d_tag_array2,
+                                                unsigned int* d_tag_array3,
+                                                unsigned int* d_tag_array4,
                                                 Scalar* d_ref_angles,
                                                 Scalar* d_angles,
                                                 Scalar2* d_oldnew_angles,
@@ -255,11 +254,11 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                        dim3(grid),dim3(threads),0,0,group_size,box,
                        d_pos,
                        d_torque,
-                       rtag,
-                       d_index_array1,
-                       d_index_array2,
-                       d_index_array3,
-                       d_index_array4,
+                       d_rtag,
+                       d_tag_array1,
+                       d_tag_array2,
+                       d_tag_array3,
+                       d_tag_array4,
                        d_ref_angles,
                        d_angles,
                        d_oldnew_angles,
