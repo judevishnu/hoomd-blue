@@ -251,6 +251,11 @@ class PYBIND11_EXPORT ParticleGroup
 
         return m_member_idx;
         }
+    
+    //! Direct access to the tag list
+    /*! \returns A GPUArray for directly accessing the tag list, intended for use in using groups
+       on the GPU \note The caller \b must \b not write to or change the array.
+    */
 
     const GlobalArray<unsigned int>& getMemberTagArray() const
 	{
