@@ -126,8 +126,8 @@ __global__ void gpu_compute_torsionaltrap_sin_force_kernel(const unsigned int gr
     Scalar3 unitddc = make_scalar3(ddc1.x/ddc1mag,ddc1.y/ddc1mag,ddc1.z/ddc1mag);
     Scalar3 unitdab = make_scalar3(dab1.x/dab1mag,dab1.y/dab1mag,dab1.z/dab1mag);
 
-    Scalar3 refvecn =__ldg(d_ref_vecn+d_ref_vecn_value(group_idx, typval));
-    Scalar3 refvecp =__ldg(d_ref_vecp+d_ref_vecp_value(group_idx, typval));
+    Scalar3 refvecn = d_ref_vecn[d_ref_vecn_value(group_idx, typval)];
+    Scalar3 refvecp = d_ref_vecp[d_ref_vecp_value(group_idx, typval)];
     Scalar dotp = dot(refvecp,unitdab) ;
     Scalar dotn = dot(refvecn,unitddc) ;
 
