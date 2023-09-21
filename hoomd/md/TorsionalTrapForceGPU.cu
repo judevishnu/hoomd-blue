@@ -151,6 +151,7 @@ __global__ void gpu_compute_torsionaltrap_sin_force_kernel(const unsigned int gr
     Scalar3 torqp;
     Scalar3 torqn;
     Scalar3 constT;
+    Scalar d_TMP_angles;
     torqp = make_scalar3(0.0,0.0,0.0);
     torqn = make_scalar3(0.0,0.0,0.0);
     oldangl = 0;
