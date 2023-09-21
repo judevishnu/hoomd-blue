@@ -38,7 +38,7 @@ hipError_t gpu_compute_torsionaltrap_sin_forces(const unsigned int group_size,co
                                                 const Index2D& d_ref_vecp_value,
                                                 const Index2D& d_ref_vecn_value,
                                                 const typeval_union* d_group_typeval,
-                                                Scalar4* d_params,
+                                                Scalar* d_params,
                                                 long unsigned int timestep,
                                                 unsigned int block_size);
 
