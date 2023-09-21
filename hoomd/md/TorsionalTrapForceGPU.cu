@@ -72,7 +72,7 @@ __global__ void gpu_compute_torsionaltrap_sin_force_kernel(const unsigned int gr
                                                        const Index2D d_ref_vecp_value,
                                                        const Index2D d_ref_vecn_value,
                                                        const typeval_union* d_group_typeval,
-                                                       const Scalar4* d_params,
+                                                       const Scalar* d_params,
                                                        long unsigned int timestep)
     {
     unsigned int group_idx = blockIdx.x * blockDim.x + threadIdx.x;

@@ -31,7 +31,7 @@ TorsionalTrapForceComputeGPU::TorsionalTrapForceComputeGPU(
 
     // allocate and zero device memory
     GPUArray<Scalar> params(m_dihedral_data->getNTypes(), m_exec_conf);
-    m_K.swap(params);
+    m_params.swap(params);
 
     GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_angles.swap(angles);
@@ -93,7 +93,7 @@ void TorsionalTrapForceComputeGPU::setParams(unsigned int type,Scalar K)
     {
     TorsionalTrapForceCompute::setParams(type, K);
 
-    ArrayHandle<Scalar> h_params(m_K, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar> h_params(m_params, access_location::host, access_mode::readwrite);
     // update the local copy of the memory
     h_params.data[type] = Scalar(K);
 
@@ -109,8 +109,6 @@ void TorsionalTrapForceComputeGPU::setParams(unsigned int type,Scalar K)
     ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
 
     // get a local copy of the simulation box too
-    const BoxDim& box = m_pdata->getBox();
-
     const BoxDim& box = m_pdata->getBox();
 
 
@@ -215,7 +213,7 @@ void TorsionalTrapForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<Scalar4> d_torque(m_torque, access_location::device, access_mode::overwrite);
 
     //ArrayHandle<Scalar> d_virial(m_virial, access_location::device, access_mode::overwrite);
-    ArrayHandle<Scalar> d_params(m_k, access_location::device, access_mode::read);
+    ArrayHandle<Scalar> d_params(m_params, access_location::device, access_mode::read);
 
 
 
@@ -284,7 +282,7 @@ namespace detail
     {
 void export_TorsionalTrapForceComputeGPU(pybind11::module& m)
     {
-    pybind11::class_<TorsionalTrapTrapForceComputeGPU,
+    pybind11::class_<TorsionalTrapForceComputeGPU,
                      TorsionalTrapForceCompute,
                      std::shared_ptr<TorsionalTrapForceComputeGPU>>(
         m,

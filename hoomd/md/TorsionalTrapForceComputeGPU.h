@@ -56,7 +56,7 @@ class PYBIND11_EXPORT TorsionalTrapForceComputeGPU : public TorsionalTrapForceCo
 
     protected:
     std::unique_ptr<Autotuner> m_tuner; //!< Autotuner for block size
-    GPUArray<Scalar4> m_params;         //!< Parameters stored on the GPU (k,t_qx,t_qy,t_qz)
+    GPUArray<Scalar> m_params;         //!< Parameters stored on the GPU (k,t_qx,t_qy,t_qz)
 
     //! Actually compute the forces
     virtual void computeForces(uint64_t timestep);
