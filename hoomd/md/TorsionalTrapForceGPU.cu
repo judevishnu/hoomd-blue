@@ -30,7 +30,7 @@ namespace kernel
     {
 
 //! GPU implementation of anglDiff
-__device__ Scalar gpu_anglDiff(Scalar diff)
+__device__ Scalar gpu_anglTrapDiff(Scalar diff)
     {
     if (diff > M_PI)
         {
@@ -163,11 +163,11 @@ __global__ void gpu_compute_torsionaltrap_sin_force_kernel(const unsigned int gr
 
 
     tmpangl = atan2(dab1.y, dab1.x) - atan2(ddc1.y, ddc1.x);
-    tmpangl = gpu_anglDiff(tmpangl);
+    tmpangl = gpu_anglTrapDiff(tmpangl);
     Scalar2 TMPoldnew_angles = __ldg(d_oldnew_angles+d_oldnew_value(group_idx, typval));
     oldangl = TMPoldnew_angles.x;
     diffangl = tmpangl - oldangl;
-    diffangl = gpu_anglDiff(diffangl);
+    diffangl = gpu_anglTrapDiff(diffangl);
     TMPoldnew_angles.y = tmpangl;
 
     d_TMP_angles = d_angles[group_idx];
