@@ -148,7 +148,7 @@ void export_AlchemicalMDParticles(pybind11::module& m);
 void export_PotentialPairAlchemicalLJGauss(pybind11::module& m);
 
 #ifdef ENABLE_HIP
-
+void export_TorsionalTrapForceComputeGPU(pybind11::module& m);
 void export_TorsionalForceComputeGPU(pybind11::module& m);
 void export_ActiveForceConstraintComputeCylinderGPU(pybind11::module& m);
 void export_ActiveForceConstraintComputeDiamondGPU(pybind11::module& m);
@@ -373,6 +373,7 @@ PYBIND11_MODULE(_md, m)
     export_PotentialExternalWallMorse(m);
 
 #ifdef ENABLE_HIP
+    export_TorsionalTrapForceComputeGPU(m);
     export_TorsionalForceComputeGPU(m);
     export_NeighborListGPU(m);
     export_NeighborListGPUBinned(m);

@@ -185,7 +185,7 @@ class TorsionalTrap(Dihedral):
         if isinstance(sim.device, hoomd.device.CPU):
             my_class = _md.TorsionalTrapForceCompute
         else:
-            my_class = _md.ActiveForceComputeGPU
+            my_class = _md.TorsionalTrapForceComputeGPU
 
         self._cpp_obj = my_class(sim.state._cpp_sys_def,
                                  sim.state._get_group(self.filter1),sim.state._get_group(self.filter2),sim.state._get_group(self.filter3),sim.state._get_group(self.filter4),self.nangles)

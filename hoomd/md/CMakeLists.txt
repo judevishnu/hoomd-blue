@@ -56,6 +56,7 @@ set(_md_sources module-md.cc
                    )
 
 set(_md_headers TorsionalTrapForceCompute.h
+                TorsionalTrapForceComputeGPU.h
                 TorsionalForceComputeGPU.h
                 TorsionalForceCompute.h
                 ActiveForceComputeGPU.h
@@ -218,6 +219,7 @@ list(APPEND _md_sources ActiveForceComputeGPU.cc
                            FIREEnergyMinimizerGPU.cc
                            ForceCompositeGPU.cc
                            ForceDistanceConstraintGPU.cc
+                           TorsionalTrapForceComputeGPU.cc
                            TorsionalForceComputeGPU.cc
                            HarmonicAngleForceComputeGPU.cc
                            HarmonicDihedralForceComputeGPU.cc
@@ -254,6 +256,7 @@ set(_md_cu_sources ActiveForceComputeGPU.cu
                       FIREEnergyMinimizerGPU.cu
                       ForceCompositeGPU.cu
                       ForceDistanceConstraintGPU.cu
+                      TorsionalTrapForceGPU.cu
                       TorsionalForceGPU.cu
                       HarmonicAngleForceGPU.cu
                       HarmonicDihedralForceGPU.cu
