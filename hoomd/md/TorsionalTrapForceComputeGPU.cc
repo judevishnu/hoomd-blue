@@ -31,7 +31,7 @@ TorsionalTrapForceComputeGPU::TorsionalTrapForceComputeGPU(
 
     // allocate and zero device memory
     GPUArray<Scalar> params(m_dihedral_data->getNTypes(), m_exec_conf);
-    m_params.swap(params);
+    m_K.swap(params);
 
     GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_angles.swap(angles);
@@ -89,11 +89,11 @@ TorsionalTrapForceComputeGPU::~TorsionalTrapForceComputeGPU() { }
     Sets parameters for the potential of a particular dihedral type and updates the
     parameters on the GPU.
 */
-void TorsionalForceComputeGPU::setParams(unsigned int type,Scalar K)
+void TorsionalTrapForceComputeGPU::setParams(unsigned int type,Scalar K)
     {
     TorsionalTrapForceCompute::setParams(type, K);
 
-    ArrayHandle<Scalar> h_params(m_params, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar> h_params(m_K, access_location::host, access_mode::readwrite);
     // update the local copy of the memory
     h_params.data[type] = Scalar(K);
 
@@ -215,7 +215,7 @@ void TorsionalTrapForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<Scalar4> d_torque(m_torque, access_location::device, access_mode::overwrite);
 
     //ArrayHandle<Scalar> d_virial(m_virial, access_location::device, access_mode::overwrite);
-    ArrayHandle<Scalar> d_params(m_params, access_location::device, access_mode::read);
+    ArrayHandle<Scalar> d_params(m_k, access_location::device, access_mode::read);
 
 
 

@@ -45,7 +45,7 @@ class PYBIND11_EXPORT TorsionalTrapForceComputeGPU : public TorsionalTrapForceCo
     */
     virtual void setAutotunerParams(bool enable, unsigned int period)
         {
-        TorsionalForceCompute::setAutotunerParams(enable, period);
+        TorsionalTrapForceCompute::setAutotunerParams(enable, period);
         m_tuner->setPeriod(period);
         m_tuner->setEnabled(enable);
         }
