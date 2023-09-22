@@ -33,13 +33,13 @@ TorsionalTrapForceComputeGPU::TorsionalTrapForceComputeGPU(
     GPUArray<Scalar> params(m_dihedral_data->getNTypes(), m_exec_conf);
     m_params.swap(params);
 
-    GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
-    m_angles.swap(angles);
+    // GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    // m_angles.swap(angles);
+    //
+    // GPUArray<Scalar> ref_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    // m_ref_angles.swap(ref_angles);
 
-    GPUArray<Scalar> ref_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
-    m_ref_angles.swap(ref_angles);
-
-    GPUArray<Scalar2> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    GPUArray<Scalar4> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_oldnew_angles.swap(oldnew_angles);
 
     GPUArray<Scalar3> ref_vecp(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
@@ -47,8 +47,8 @@ TorsionalTrapForceComputeGPU::TorsionalTrapForceComputeGPU(
     GPUArray<Scalar3> ref_vecn(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_ref_vecn.swap(ref_vecn);
 
-    assert(!m_angles.isNull());
-    assert(!m_ref_angles.isNull());
+    // assert(!m_angles.isNull());
+    // assert(!m_ref_angles.isNull());
     assert(!m_oldnew_angles.isNull());
     assert(!m_ref_vecp.isNull());
     assert(!m_ref_vecn.isNull());
@@ -97,10 +97,10 @@ void TorsionalTrapForceComputeGPU::setParams(unsigned int type,Scalar K)
     // update the local copy of the memory
     h_params.data[type] = Scalar(K);
 
-    ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
-    ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
+    // ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
+    // ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
 
-    ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar4> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
     ArrayHandle<Scalar3> h_ref_vecp(m_ref_vecp, access_location::host, access_mode::readwrite);
     ArrayHandle<Scalar3> h_ref_vecn(m_ref_vecn, access_location::host, access_mode::readwrite);
 
@@ -164,8 +164,8 @@ void TorsionalTrapForceComputeGPU::setParams(unsigned int type,Scalar K)
         angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
         h_oldnew_angles.data[m_oldnew_value(i, type)].x = angl;
         h_oldnew_angles.data[m_oldnew_value(i, type)].y = angl;
-        h_ref_angles.data[i] = angl;
-        h_angles.data[i] = 0;
+        h_oldnew_angles.data[m_oldnew_value(i, type)].w = angl;
+        h_oldnew_angles.data[m_oldnew_value(i, type)].z = 0;
         Scalar rsqdab = dab.x*dab.x + dab.y*dab.y + dab.z*dab.z;
         Scalar rsqrtdab = sqrt(rsqdab);
         Scalar rsqddc = ddc.x*ddc.x + ddc.y*ddc.y + ddc.z*ddc.z;
@@ -217,10 +217,10 @@ void TorsionalTrapForceComputeGPU::computeForces(uint64_t timestep)
 
 
 
-    ArrayHandle<Scalar> d_angles(m_angles, access_location::device, access_mode::readwrite);
-    ArrayHandle<Scalar> d_ref_angles(m_ref_angles, access_location::device, access_mode::readwrite);
+    // ArrayHandle<Scalar> d_angles(m_angles, access_location::device, access_mode::readwrite);
+    // ArrayHandle<Scalar> d_ref_angles(m_ref_angles, access_location::device, access_mode::readwrite);
 
-    ArrayHandle<Scalar2> d_oldnew_angles(m_oldnew_angles, access_location::device, access_mode::readwrite);
+    ArrayHandle<Scalar4> d_oldnew_angles(m_oldnew_angles, access_location::device, access_mode::readwrite);
     ArrayHandle<Scalar3> d_ref_vecp(m_ref_vecp, access_location::device, access_mode::readwrite);
     ArrayHandle<Scalar3> d_ref_vecn(m_ref_vecn, access_location::device, access_mode::readwrite);
 
@@ -230,11 +230,11 @@ void TorsionalTrapForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<unsigned int> d_tag_array4(m_group4->getMemberTagArray(),access_location::device,access_mode::read);
 
     //sanity check
-    assert(d_ref_angles.data != NULL);
+    // assert(d_ref_angles.data != NULL);
     assert(d_oldnew_angles.data != NULL);
     assert(d_ref_vecp.data != NULL);
     assert(d_ref_vecn.data != NULL);
-    assert(d_angles.data != NULL);
+    // assert(d_angles.data != NULL);
     assert(d_pos.data != NULL);
     assert(d_torque.data != NULL);
     assert(d_rtag.data != NULL);
@@ -257,8 +257,6 @@ void TorsionalTrapForceComputeGPU::computeForces(uint64_t timestep)
                                                  d_tag_array2.data,
                                                  d_tag_array3.data,
                                                  d_tag_array4.data,
-                                                 d_ref_angles.data,
-                                                 d_angles.data,
                                                  d_oldnew_angles.data,
                                                  d_ref_vecp.data,
                                                  d_ref_vecn.data,

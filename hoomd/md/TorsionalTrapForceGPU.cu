@@ -63,9 +63,7 @@ __global__ void gpu_compute_torsionaltrap_sin_force_kernel(const unsigned int gr
                                                        unsigned int* d_tag_array2,
                                                        unsigned int* d_tag_array3,
                                                        unsigned int* d_tag_array4,
-                                                       Scalar* d_ref_angles,
-                                                       Scalar* d_angles,
-                                                       Scalar2* d_oldnew_angles,
+                                                       Scalar4* d_oldnew_angles,
                                                        Scalar3* d_ref_vecp,
                                                        Scalar3* d_ref_vecn,
                                                        const Index2D d_oldnew_value,
@@ -164,17 +162,17 @@ __global__ void gpu_compute_torsionaltrap_sin_force_kernel(const unsigned int gr
 
     tmpangl = atan2(dab1.y, dab1.x) - atan2(ddc1.y, ddc1.x);
     tmpangl = gpu_anglTrapDiff(tmpangl);
-    Scalar2 TMPoldnew_angles = __ldg(d_oldnew_angles+d_oldnew_value(group_idx, typval));
+    Scalar4 TMPoldnew_angles = __ldg(d_oldnew_angles+d_oldnew_value(group_idx, typval));
     oldangl = TMPoldnew_angles.x;
     diffangl = tmpangl - oldangl;
     diffangl = gpu_anglTrapDiff(diffangl);
     TMPoldnew_angles.y = tmpangl;
 
-    d_TMP_angles = d_angles[group_idx];
+    d_TMP_angles = TMPoldnew_angles.z;
     angl = d_TMP_angles+diffangl;
-    ref_angl = d_ref_angles[group_idx];
+    ref_angl = TMPoldnew_angles.w;
     //printf("%d %f \n",i,angl);
-    d_angles[group_idx] = angl;
+    TMPoldnew_angles.z = angl;
 
     TMPoldnew_angles.x = tmpangl;
     d_oldnew_angles[d_oldnew_value(group_idx, typval)] = TMPoldnew_angles;
@@ -219,9 +217,7 @@ hipError_t gpu_compute_torsionaltrap_sin_forces(const unsigned int group_size,co
                                                 unsigned int* d_tag_array2,
                                                 unsigned int* d_tag_array3,
                                                 unsigned int* d_tag_array4,
-                                                Scalar* d_ref_angles,
-                                                Scalar* d_angles,
-                                                Scalar2* d_oldnew_angles,
+                                                Scalar4* d_oldnew_angles,
                                                 Scalar3* d_ref_vecp,
                                                 Scalar3* d_ref_vecn,
                                                 const Index2D& d_oldnew_value,
@@ -261,8 +257,6 @@ hipError_t gpu_compute_torsionaltrap_sin_forces(const unsigned int group_size,co
                        d_tag_array2,
                        d_tag_array3,
                        d_tag_array4,
-                       d_ref_angles,
-                       d_angles,
                        d_oldnew_angles,
                        d_ref_vecp,
                        d_ref_vecn,

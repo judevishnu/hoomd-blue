@@ -130,10 +130,10 @@ class PYBIND11_EXPORT TorsionalTrapForceCompute : public ForceCompute
     protected:
 
     Scalar* m_K;     //!< K parameter for multiple dihedral tyes
-    GPUArray<Scalar> m_angles;
-    GPUArray<Scalar> m_ref_angles;
+    // GPUArray<Scalar> m_angles;
+    // GPUArray<Scalar> m_ref_angles;
 
-    GPUArray<Scalar2> m_oldnew_angles; //!< x component old and y component new angles
+    GPUArray<Scalar4> m_oldnew_angles; //!< x component old and y component new angles
     Index2D m_oldnew_value;            //!< Index table helper
 
     GPUArray<Scalar3> m_ref_vecp;
