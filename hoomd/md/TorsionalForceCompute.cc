@@ -42,13 +42,13 @@ TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> s
     m_t_qy = new Scalar[m_dihedral_data->getNTypes()];
     m_t_qz = new Scalar[m_dihedral_data->getNTypes()];
     // allocate storage for the angles, newangles and old angles
-    GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
-    m_angles.swap(angles);
+    // GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    // m_angles.swap(angles);
+    //
+    // GPUArray<Scalar> ref_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    // m_ref_angles.swap(ref_angles);
 
-    GPUArray<Scalar> ref_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
-    m_ref_angles.swap(ref_angles);
-
-    GPUArray<Scalar2> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    GPUArray<Scalar4> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_oldnew_angles.swap(oldnew_angles);
 
     assert(!m_angles.isNull());
@@ -180,10 +180,10 @@ void TorsionalForceCompute::setParams(unsigned int type,Scalar K, Scalar t_qx, S
         m_exec_conf->msg->warning() << "torsional.sin: specified K <= 0" << endl;
 
 
-    ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
-    ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
+    //ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
+    //ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
 
-    ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar4> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
 
     ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
     ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
@@ -257,8 +257,8 @@ void TorsionalForceCompute::setParams(unsigned int type,Scalar K, Scalar t_qx, S
         angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
         h_oldnew_angles.data[m_oldnew_value(i, type)].x = angl;
         h_oldnew_angles.data[m_oldnew_value(i, type)].y = angl;
-        h_ref_angles.data[i] = angl;
-        h_angles.data[i] = 0;
+        h_oldnew_angles.data[m_oldnew_value(i, type)].z = 0;
+        h_oldnew_angles.data[m_oldnew_value(i, type)].w = angl;
 
         }
 
@@ -276,7 +276,9 @@ void TorsionalForceCompute::setParamsPython(std::string type, pybind11::dict par
 pybind11::dict TorsionalForceCompute::getParams(std::string type)
     {
     auto typ = m_dihedral_data->getTypeByName(type);
-    ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::read);
+    //ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::read);
+    ArrayHandle<Scalar4> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::read);
+
 
     pybind11::dict params;
     params["k"] = m_K[typ];
@@ -289,7 +291,7 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
 
     for (unsigned int i = 0; i < m_num_angles; i++)
         {
-        angL_unchecked(i) = h_angles.data[i];
+        angL_unchecked(i) = h_oldnew_angles.data[m_oldnew_value(i, typ)].z;
         }
 
     //params["angles"] = angL;
@@ -302,13 +304,15 @@ pybind11::dict TorsionalForceCompute::getParams(std::string type)
 pybind11::array_t<Scalar> TorsionalForceCompute::getangles(std::string type)
     {
     auto typ = m_dihedral_data->getTypeByName(type);
-    ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::read);
+    //ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::read);
+    ArrayHandle<Scalar4> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::read);
+
     auto angL = pybind11::array_t<Scalar>(m_num_angles);
     auto angL_unchecked = angL.mutable_unchecked<1>();
 
     for (unsigned int i = 0; i < m_num_angles; i++)
         {
-        angL_unchecked(i) = h_angles.data[i];
+        angL_unchecked(i) = h_oldnew_angles.data[m_oldnew_value(i, typ)].z;
         }
 
     return angL;
@@ -327,10 +331,10 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
     ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
     ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
     //access angles , old and new angles in readwrite mode
-    ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
-    ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
+    // ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
+    // ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
 
-    ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar4> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
     //Change force to Torque
     //ArrayHandle<Scalar4> h_force(m_force, access_location::host, access_mode::overwrite);
     ArrayHandle<Scalar4> h_torque(m_torque, access_location::host, access_mode::overwrite);
@@ -461,9 +465,9 @@ void TorsionalForceCompute::computeForces(uint64_t timestep)
         diffangl = tmpangl - oldangl;
         diffangl = anglDiff(diffangl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].y = tmpangl;
-        angl = h_angles.data[i]+diffangl;
+        angl = h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].z+diffangl;
         //printf("%d %f \n",i,angl);
-        h_angles.data[i] = angl;
+        h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].z = angl;
         Scalar cs = slow::cos(angl);
         Scalar ss = slow::sin(angl);
         h_oldnew_angles.data[m_oldnew_value(i, dihedral_type)].x = tmpangl;
