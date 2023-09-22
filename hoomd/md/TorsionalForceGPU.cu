@@ -63,9 +63,7 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
                                                        unsigned int* d_tag_array2,
                                                        unsigned int* d_tag_array3,
                                                        unsigned int* d_tag_array4,
-                                                       Scalar* d_ref_angles,
-                                                       Scalar* d_angles,
-                                                       Scalar2* d_oldnew_angles,
+                                                       Scalar4* d_oldnew_angles,
                                                        const Index2D d_oldnew_value,
                                                        const typeval_union* d_group_typeval,
                                                        const Scalar4* d_params,
@@ -141,16 +139,16 @@ __global__ void gpu_compute_torsional_sin_force_kernel(const unsigned int group_
 
     tmpangl = gpu_anglDiff(tmpangl);
 
-    Scalar2 TMPoldnew_angles = __ldg(d_oldnew_angles+d_oldnew_value(group_idx, typval));
+    Scalar4 TMPoldnew_angles = __ldg(d_oldnew_angles+d_oldnew_value(group_idx, typval));
     oldangl = TMPoldnew_angles.x;
     diffangl = tmpangl - oldangl;
     diffangl = gpu_anglDiff(diffangl);
 
     TMPoldnew_angles.y = tmpangl;
-    d_TMP_angles = d_angles[group_idx];
+    d_TMP_angles = TMPoldnew_angles.z;
     angl = d_TMP_angles+diffangl;
 
-    d_angles[group_idx] = angl;
+    TMPoldnew_angles.z = angl;
     Scalar cs = slow::cos(angl);
     Scalar ss = slow::sin(angl);
 
@@ -220,12 +218,9 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                                                 unsigned int* d_tag_array2,
                                                 unsigned int* d_tag_array3,
                                                 unsigned int* d_tag_array4,
-                                                Scalar* d_ref_angles,
-                                                Scalar* d_angles,
-                                                Scalar2* d_oldnew_angles,
+                                                Scalar4* d_oldnew_angles,
                                                 const Index2D& d_oldnew_value,
                                                 const typeval_union* d_group_typeval,
-
                                                 Scalar4* d_params,
                                                 long unsigned int timestep,
                                                 unsigned int block_size)
@@ -259,8 +254,6 @@ hipError_t gpu_compute_torsional_sin_forces(const unsigned int group_size,const 
                        d_tag_array2,
                        d_tag_array3,
                        d_tag_array4,
-                       d_ref_angles,
-                       d_angles,
                        d_oldnew_angles,
                        d_oldnew_value,
                        d_group_typeval,

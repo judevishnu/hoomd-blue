@@ -33,17 +33,17 @@ TorsionalForceComputeGPU::TorsionalForceComputeGPU(
     GPUArray<Scalar4> params(m_dihedral_data->getNTypes(), m_exec_conf);
     m_params.swap(params);
 
-    GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
-    m_angles.swap(angles);
+    //GPUArray<Scalar> angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    //m_angles.swap(angles);
 
-    GPUArray<Scalar> ref_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
-    m_ref_angles.swap(ref_angles);
+    //GPUArray<Scalar> ref_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    //m_ref_angles.swap(ref_angles);
 
-    GPUArray<Scalar2> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
+    GPUArray<Scalar4> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_oldnew_angles.swap(oldnew_angles);
 
-    assert(!m_angles.isNull());
-    assert(!m_ref_angles.isNull());
+    //assert(!m_angles.isNull());
+    //assert(!m_ref_angles.isNull());
     assert(!m_oldnew_angles.isNull());
     Index2D oldnew_value((unsigned int)m_oldnew_angles.getPitch(),
                         (unsigned int)m_dihedral_data->getNTypes());
@@ -81,10 +81,10 @@ void TorsionalForceComputeGPU::setParams(unsigned int type,Scalar K, Scalar t_qx
     h_params.data[type]
         = make_scalar4(Scalar(K), Scalar(t_qx), Scalar(t_qy), Scalar(t_qz));
 
-    ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
-    ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
+    //ArrayHandle<Scalar> h_angles(m_angles, access_location::host, access_mode::readwrite);
+    //ArrayHandle<Scalar> h_ref_angles(m_ref_angles, access_location::host, access_mode::readwrite);
 
-    ArrayHandle<Scalar2> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
+    ArrayHandle<Scalar4> h_oldnew_angles(m_oldnew_angles, access_location::host, access_mode::readwrite);
 
     ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::read);
     ArrayHandle<unsigned int> h_rtag(m_pdata->getRTags(), access_location::host, access_mode::read);
@@ -126,8 +126,8 @@ void TorsionalForceComputeGPU::setParams(unsigned int type,Scalar K, Scalar t_qx
         angl = atan2(dab.y, dab.x) - atan2(ddc.y, ddc.x);
         h_oldnew_angles.data[m_oldnew_value(i, type)].x = angl;
         h_oldnew_angles.data[m_oldnew_value(i, type)].y = angl;
-        h_ref_angles.data[i] = angl;
-        h_angles.data[i] = 0;
+        h_oldnew_angles.data[m_oldnew_value(i, type)].z = 0;
+        h_oldnew_angles.data[m_oldnew_value(i, type)].w = angl;
 
         }
 
@@ -164,10 +164,10 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<Scalar4> d_params(m_params, access_location::device, access_mode::read);
 
 
-    ArrayHandle<Scalar> d_angles(m_angles, access_location::device, access_mode::readwrite);
-    ArrayHandle<Scalar> d_ref_angles(m_ref_angles, access_location::device, access_mode::readwrite);
+    //ArrayHandle<Scalar> d_angles(m_angles, access_location::device, access_mode::readwrite);
+    //ArrayHandle<Scalar> d_ref_angles(m_ref_angles, access_location::device, access_mode::readwrite);
 
-    ArrayHandle<Scalar2> d_oldnew_angles(m_oldnew_angles, access_location::device, access_mode::readwrite);
+    ArrayHandle<Scalar4> d_oldnew_angles(m_oldnew_angles, access_location::device, access_mode::readwrite);
 
 
 
@@ -177,9 +177,9 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
     ArrayHandle<unsigned int> d_tag_array4(m_group4->getMemberTagArray(),access_location::device,access_mode::read);
 
     //sanity check
-    assert(d_ref_angles.data != NULL);
+    //assert(d_ref_angles.data != NULL);
     assert(d_oldnew_angles.data != NULL);
-    assert(d_angles.data != NULL);
+    //assert(d_angles.data != NULL);
     assert(d_pos.data != NULL);
     assert(d_torque.data != NULL);
     assert(d_rtag.data != NULL);
@@ -202,8 +202,6 @@ void TorsionalForceComputeGPU::computeForces(uint64_t timestep)
                                                  d_tag_array2.data,
                                                  d_tag_array3.data,
                                                  d_tag_array4.data,
-                                                 d_ref_angles.data,
-                                                 d_angles.data,
                                                  d_oldnew_angles.data,
                                                  m_oldnew_value,
                                                  d_group_typeval.data,

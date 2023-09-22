@@ -51,8 +51,8 @@ TorsionalForceCompute::TorsionalForceCompute(std::shared_ptr<SystemDefinition> s
     GPUArray<Scalar4> oldnew_angles(m_num_angles, m_dihedral_data->getNTypes(), m_exec_conf);
     m_oldnew_angles.swap(oldnew_angles);
 
-    assert(!m_angles.isNull());
-    assert(!m_ref_angles.isNull());
+    //assert(!m_angles.isNull());
+    //assert(!m_ref_angles.isNull());
     assert(!m_oldnew_angles.isNull());
     Index2D oldnew_value((unsigned int)m_oldnew_angles.getPitch(),
                         (unsigned int)m_dihedral_data->getNTypes());
